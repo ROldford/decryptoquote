@@ -25,12 +25,11 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     description="Decrypts cryptoquote puzzles",
     install_requires=requirements,
@@ -46,4 +45,9 @@ setup(
     url='https://github.com/roldford/decryptoquote',
     version='0.1.0',
     zip_safe=False,
+    entry_points = {
+        'console_scripts': [
+            'decryptoquote = decryptoquote.__main__:main'
+        ]
+    }
 )
