@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4ea59e503fc377df00d530793ec6e70917cdf7833660c88508dbf9673d29e954"
+            "sha256": "7233745dabe71fe0a8ca9f074376be77cb6493ed057ec475be971598a8d5f9ee"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -13,9 +13,22 @@
         ]
     },
     "default": {
+        "anytree": {
+            "hashes": [
+                "sha256:a221b6a603c3a5d5e417894dc48eaa8b1eab04056e1f5bb509bcfff0e7a47883"
+            ],
+            "version": "==2.6.0"
+        },
         "decryptoquote": {
             "editable": true,
             "path": "."
+        },
+        "six": {
+            "hashes": [
+                "sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c",
+                "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+            ],
+            "version": "==1.12.0"
         }
     },
     "develop": {
