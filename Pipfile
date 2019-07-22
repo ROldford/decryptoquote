@@ -13,6 +13,7 @@ pytest = "*"
 pytest-runner = "*"
 Sphinx = "*"
 twine = "*"
+pyfakefs = "*"
 
 [packages]
 decryptoquote = {path = ".",editable = true}
