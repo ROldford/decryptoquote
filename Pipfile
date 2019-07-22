@@ -14,6 +14,7 @@ pytest-runner = "*"
 Sphinx = "*"
 twine = "*"
 pyfakefs = "*"
+pytest-cov = "*"
 
 [packages]
 decryptoquote = {path = ".",editable = true}
