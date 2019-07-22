@@ -4,8 +4,25 @@
 
 import re
 import string
+from collections import Counter
 
 from anytree import Node
+
+class LanguageModel:
+    def __init__(self, file_path):
+        corpus_text = ""
+        try:
+            with open(file_path) as file:
+                corpus_text = file.read()
+        except IOError as ioerr:
+            raise IOError("Language model file is not valid") from ioerr
+        word_list = re.findall("[a-z']+", corpus_text.lower())
+        self.WORD_COUNTER = Counter(word_list)
+        self.TOTAL_WORDS = sum(self.WORD_COUNTER.values())
+
+    def isValidWord(self, word):
+        return word.lower() in self.WORD_COUNTER
+
 
 def stringToCapsWords(input):
     input_caps = input.upper()
@@ -49,6 +66,8 @@ def generateSearchTree(coded_quote_words):
 # in that case, generate_search_tree will be class method
 # can have this function call class method to keep unit tests solid
 
+
+
 def decryptQuote(coded_quote):
     coded_quote_words = stringToCapsWords(coded_quote)
     search_tree_root = generateSearchTree(coded_quote_words)
@@ -73,5 +92,4 @@ def decryptQuote(coded_quote):
         # If no children can be generated, set OK to "No" and go to parent
         # Drop down to next child with OK = "Maybe"
             # If no available children, set OK to "No" and go to parent
-
     return coded_quote
