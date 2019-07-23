@@ -43,5 +43,54 @@ def test_isValidWord(model):
     assert model.isValidWord("isn't") == True
     assert model.isValidWord("invalid") == False
 
-def test_getLetterProbabilities(fs):
-    assert True
+def test_wordMatch(model):
+    assert model.wordMatch("this", "this") == True
+    assert model.wordMatch("isn't", "isn't") == True
+    assert model.wordMatch("th**", "this") == True
+    assert model.wordMatch("th**", "that") == True
+    assert model.wordMatch("is*'*", "isn't") == True
+    assert model.wordMatch("this", "that") == False
+    assert model.wordMatch("th", "this") == False
+    assert model.wordMatch("isnt", "isn't") == False
+    assert model.wordMatch("****", "this") == True
+    assert model.wordMatch("****", "that") == True
+
+def test_getLetterProbabilities(model):
+    # expect output lists to be sorted by p first,
+    # then alphabetically
+    assert model.getLetterProbabilities("****") == {
+        0: [
+            ("t", round(5/7, 3)),
+            ("a", round(1/7, 3)),
+            ("s", round(1/7, 3))
+        ],
+        1: [
+            ("h", round(3/7, 3)),
+            ("e", round(2/7, 3)),
+            ("l", round(1/7, 3)),
+            ("o", round(1/7, 3))
+        ],
+        2: [
+            ("i", round(3/7, 3)),
+            ("x", round(2/7, 3)),
+            ("m", round(1/7, 3)),
+            ("s", round(1/7, 3))
+        ],
+        3: [
+            ("s", round(3/7, 3)),
+            ("t", round(2/7, 3)),
+            ("e", round(1/7, 3)),
+            ("o", round(1/7, 3))
+        ]
+    }
+    assert model.getLetterProbabilities("*h**") == {
+        0: [("t", 1.000)],
+        2: [("i", 1.000)],
+        3: [("s", 1.000)]
+    }
+    assert model.getLetterProbabilities("***'*") == {
+        0: [("i", 1.000)],
+        1: [("s", 1.000)],
+        2: [("n", 1.000)],
+        4: [("t", 1.000)],
+    }

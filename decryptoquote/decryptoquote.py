@@ -20,8 +20,53 @@ class LanguageModel:
         self.WORD_COUNTER = Counter(word_list)
         self.TOTAL_WORDS = sum(self.WORD_COUNTER.values())
 
+    def wordMatch(self, word, elem):
+        word_length = len(word)
+        elem_length = len(elem)
+        if word_length != elem_length:
+            return False
+        for i in range(word_length):
+            if word[i] != "*" and word[i] != elem[i]:
+                return False
+        return True
+
     def isValidWord(self, word):
         return word.lower() in self.WORD_COUNTER
+
+    def getLetterProbabilities(self, word):
+        return_dict = {}
+        filtered_word_dict = {
+            k: v for k, v in self.WORD_COUNTER.items() if self.wordMatch(word, k)
+        }
+        filtered_word_counter = Counter(filtered_word_dict)
+        filtered_total_words = sum(filtered_word_counter.values())
+        for i in range(len(word)):
+            # TODO: replace literal with imported constant
+            if word[i] == "*":
+                current_char_counter = Counter()
+                for filtered_word, count in filtered_word_counter.items():
+                    filtered_char = filtered_word[i]
+                    current_char_counter += Counter({filtered_char: count})
+                current_char_count_list = list(current_char_counter.items())
+                current_char_total = sum(current_char_counter.values())
+                current_char_count_list = [
+                    (
+                        i[0], round(i[1]/current_char_total, 3)
+                    ) for i in current_char_count_list
+                ]
+                # Sort aphabetically, then by probability
+                # sorted is stable sort,
+                # so list is sorted by p, then alphabetically
+                current_char_count_list = sorted(current_char_count_list)
+                current_char_count_list = sorted(
+                    current_char_count_list,
+                    key=lambda element: element[1],
+                    reverse=True)
+                return_dict.update({i: current_char_count_list})
+        return return_dict
+
+
+
 
 
 def stringToCapsWords(input):
@@ -34,6 +79,7 @@ def generateEmptyPlaintextWords(input):
         output_word = ""
         for char in word:
             if char.isalpha():
+                # TODO: replace literal with imported constant
                 output_word += "*"
             else:
                 output_word += char
