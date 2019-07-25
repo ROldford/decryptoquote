@@ -19,28 +19,12 @@ blank_coding_dict = {
     "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
 }
 
-def test_stringToCapsWords():
-    input = test_string
-    expected = test_coded_quote_words
-    assert decryptoquote.stringToCapsWords(input) == expected
-
-def test_generateEmptyPlaintextWords():
-    input = test_coded_quote_words
-    expected = blank_plaintext_words
-    assert decryptoquote.generateEmptyPlaintextWords(input) == expected
-
-def test_generateBlankCodingDictionary():
-    expected = blank_coding_dict
-    assert decryptoquote.generateBlankCodingDictionary() == expected
-
 def test_generateSearchTree():
-    expected_root_node = Node(
-        "0",
-        coding_dict=blank_coding_dict,
-        plaintext_words=blank_plaintext_words,
-        ok_flag = "Maybe")
-    output = decryptoquote.generateSearchTree(test_coded_quote_words)
-    assert output.name == expected_root_node.name
-    assert output.coding_dict == expected_root_node.coding_dict
-    assert output.plaintext_words == expected_root_node.plaintext_words
-    assert output.ok_flag == expected_root_node.ok_flag
+    expected_values = {
+        "node_name": "0",
+        "ok_flag": "Maybe"
+    }
+    output = decryptoquote.generateSearchTree(test_string)
+    assert output.name == expected_values["node_name"]
+    assert isinstance(output.puzzle, decryptoquote.Puzzle)
+    assert output.ok_flag == expected_values["ok_flag"]

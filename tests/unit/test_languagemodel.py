@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Unit tests for `decryptoquote` package."""
+"""Unit tests for LanguageModel class in `decryptoquote` package."""
 
 import pytest
 import pyfakefs

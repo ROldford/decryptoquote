@@ -66,42 +66,42 @@ class LanguageModel:
         return return_dict
 
 
+class Puzzle:
+    def __init__(self, input):
+        self.coded_words = self.stringToCapsWords(input)
+        self.decoded_words = self.initDecodedWords(self.coded_words)
+        self.coding_dict = self.initCodingDict()
 
+    def stringToCapsWords(self, input):
+        input_caps = input.upper()
+        return re.findall(r"[\w']+|[.,!?;]", input_caps)
 
+    def initDecodedWords(self, input):
+        output_words = []
+        for word in input:
+            output_word = ""
+            for char in word:
+                if char.isalpha():
+                    # TODO: replace literal with imported constant
+                    output_word += "*"
+                else:
+                    output_word += char
+            output_words.append(output_word)
+        return output_words
 
-def stringToCapsWords(input):
-    input_caps = input.upper()
-    return re.findall(r"[\w']+|[.,!?;]", input_caps)
+    def initCodingDict(self):
+        blank_coding_dict = {}
+        uppercase_list = list(string.ascii_uppercase)
+        for letter in uppercase_list:
+            blank_coding_dict[letter] = "*"
+        return blank_coding_dict
 
-def generateEmptyPlaintextWords(input):
-    output_words = []
-    for word in input:
-        output_word = ""
-        for char in word:
-            if char.isalpha():
-                # TODO: replace literal with imported constant
-                output_word += "*"
-            else:
-                output_word += char
-        output_words.append(output_word)
-    return output_words
-
-def generateBlankCodingDictionary():
-    blank_coding_dict = {}
-    uppercase_list = list(string.ascii_uppercase)
-    for letter in uppercase_list:
-        blank_coding_dict[letter] = "*"
-    return blank_coding_dict
-
-def generateSearchTree(coded_quote_words):
+def generateSearchTree(coded_quote):
     # Set up search tree to store attempted encodings
         # Each node has current coding_dict, plaintext_words, OK flag
-    blank_plaintext_words = generateEmptyPlaintextWords(coded_quote_words)
-    blank_coding_dict = generateBlankCodingDictionary()
     return Node(
         "0",
-        coding_dict = blank_coding_dict,
-        plaintext_words = blank_plaintext_words,
+        puzzle = Puzzle(coded_quote),
         ok_flag = "Maybe"
         # TODO: Make this into imported constant
         )
