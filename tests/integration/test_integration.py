@@ -40,7 +40,7 @@ class TestIntegration(object):
         ),
     ]
 
-    @pytest.mark.parametrize("coded_quote, plaintext", test_data)
-    def test_is_correct(self, coded_quote, plaintext):
+    @pytest.mark.parametrize("coded_quote, decoded", test_data)
+    def test_is_correct(self, coded_quote, decoded):
         result = decryptoquote.decryptQuote(coded_quote)
-        assert result == plaintext
+        assert result == decoded

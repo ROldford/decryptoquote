@@ -96,27 +96,20 @@ class Puzzle:
             blank_coding_dict[letter] = "*"
         return blank_coding_dict
 
-def generateSearchTree(coded_quote):
-    # Set up search tree to store attempted encodings
-        # Each node has current coding_dict, plaintext_words, OK flag
-    return Node(
-        "0",
-        puzzle = Puzzle(coded_quote),
-        ok_flag = "Maybe"
-        # TODO: Make this into imported constant
+
+class SearchTree:
+    def __init__(self, coded_quote):
+        self.total_nodes = 0
+        self.current_node = Node(
+            self.total_nodes,
+            puzzle = Puzzle(coded_quote),
+            ok_flag = "Maybe"
         )
-
-# generation of new search tree nodes involves checking number of nodes
-# can just use iteration to get all nodes and use .length
-# may need to switch to generator class with running total
-# in that case, generate_search_tree will be class method
-# can have this function call class method to keep unit tests solid
-
 
 
 def decryptQuote(coded_quote):
-    coded_quote_words = stringToCapsWords(coded_quote)
-    search_tree_root = generateSearchTree(coded_quote_words)
+    # language_model = LanguageModel("bigtext.txt")
+    search_tree = SearchTree(coded_quote_words)
     # Loop until done:
         # Check validity of current node's decoding dict
             # Valid if >95% of all fully decoded words (except last 2)...
