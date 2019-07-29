@@ -99,12 +99,18 @@ class Puzzle:
 
 class SearchTree:
     def __init__(self, coded_quote):
-        self.total_nodes = 0
-        self.current_node = Node(
-            self.total_nodes,
-            puzzle = Puzzle(coded_quote),
-            ok_flag = "Maybe"
+        self.__nodes = []
+        self.__current_node_index = 0
+        self.__nodes.append(
+            Node(
+                self.__current_node_index,
+                puzzle = Puzzle(coded_quote),
+                ok_flag = "Maybe"
+            )
         )
+
+    def getCurrentNode(self):
+        return self.__nodes[self.__current_node_index]
 
 
 def decryptQuote(coded_quote):
