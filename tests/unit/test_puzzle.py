@@ -9,34 +9,70 @@ from decryptoquote import decryptoquote
 
 test_string = "Hello, I'm a string!"
 test_coded_quote_words = ['HELLO', ',', "I'M", 'A', 'STRING', '!']
-blank_plaintext_words = ['*****', ',', "*'*", '*', '******', '!']
-blank_coding_dict = {
-    "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
-    "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
-    "K": "*", "L": "*", "M": "*", "N": "*", "O": "*",
-    "P": "*", "Q": "*", "R": "*", "S": "*", "T": "*",
-    "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
+decoded = {
+    "blank": ['*****', ',', "*'*", '*', '******', '!'],
+    "in_progress": ['*****', ',', "*'*", '*', '******', '!'],
+    "finished": ['*****', ',', "*'*", '*', '******', '!']
+}
+coding_dict = {
+    "blank":
+        {
+            "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
+            "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
+            "K": "*", "L": "*", "M": "*", "N": "*", "O": "*",
+            "P": "*", "Q": "*", "R": "*", "S": "*", "T": "*",
+            "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
+        },
+    "in_progress":
+        {
+            "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
+            "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
+            "K": "*", "L": "*", "M": "*", "N": "*", "O": "*",
+            "P": "*", "Q": "*", "R": "*", "S": "*", "T": "*",
+            "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
+        },
+    "finished":
+        {
+            "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
+            "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
+            "K": "*", "L": "*", "M": "*", "N": "*", "O": "*",
+            "P": "*", "Q": "*", "R": "*", "S": "*", "T": "*",
+            "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
+        }
 }
 
+
 @pytest.fixture
-def puzzle():
+def puzzle_blank():
     return decryptoquote.Puzzle(test_string)
 
-def test_stringToCapsWords(puzzle):
+@pytest.fixture
+def puzzle_in_progress():
+    decoded_words = []
+    return decryptoquote.Puzzle(
+        test_coded_quote_words,
+        decoded["in_progress"],
+        coding_dict["in_progress"]
+    )
+
+def test_stringToCapsWords(puzzle_blank):
     input = test_string
     expected = test_coded_quote_words
-    assert puzzle.stringToCapsWords(input) == expected
+    assert puzzle_blank.stringToCapsWords(input) == expected
 
-def test_initDecodedWords(puzzle):
+def test_initDecodedWords(puzzle_blank):
     input = test_coded_quote_words
-    expected = blank_plaintext_words
-    assert puzzle.initDecodedWords(input) == expected
+    expected = decoded["blank"]
+    assert puzzle_blank.initDecodedWords(input) == expected
 
-def test_initCodingDict(puzzle):
-    expected = blank_coding_dict
-    assert puzzle.initCodingDict() == expected
+def test_initCodingDict(puzzle_blank):
+    expected = coding_dict["blank"]
+    assert puzzle_blank.initCodingDict() == expected
 
-def test_puzzleInit(puzzle):
-    assert puzzle.coded_words == test_coded_quote_words
-    assert puzzle.decoded_words == blank_plaintext_words
-    assert puzzle.coding_dict == blank_coding_dict
+def test_initPuzzle(puzzle_blank):
+    assert puzzle_blank.coded_words == test_coded_quote_words
+    assert puzzle_blank.decoded_words == decoded["blank"]
+    assert puzzle_blank.coding_dict == coding_dict["blank"]
+
+def test_codingDictIsValid(puzzle_blank):
+    assert True

@@ -67,10 +67,22 @@ class LanguageModel:
 
 
 class Puzzle:
-    def __init__(self, input):
-        self.coded_words = self.stringToCapsWords(input)
-        self.decoded_words = self.initDecodedWords(self.coded_words)
-        self.coding_dict = self.initCodingDict()
+    def __init__(self, coded, decoded_words=None, coding_dict=None):
+        # TODO: remove isinstance use (but what can replace it?)
+        if isinstance(coded, str):
+            self.coded_words = self.stringToCapsWords(coded)
+        elif isinstance(coded, list):
+            self.coded_words = coded
+        else:
+            raise TypeError("Bad type for coded quote data, use string or list")
+        if decoded_words is None:
+            self.decoded_words = self.initDecodedWords(self.coded_words)
+        else:
+            self.decoded_words = decoded_words
+        if coding_dict is None:
+            self.coding_dict = self.initCodingDict()
+        else:
+            self.coding_dict = coding_dict
 
     def stringToCapsWords(self, input):
         input_caps = input.upper()
