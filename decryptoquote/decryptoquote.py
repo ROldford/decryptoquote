@@ -5,22 +5,33 @@
 import re
 import string
 from collections import Counter
+from typing import Dict, List, Union, Tuple, Any
 
 from anytree import Node
 
 class LanguageModel:
-    def __init__(self, file_path):
-        corpus_text = ""
+    def __init__(self, file_path: str) -> None:
+        """
+        Create LanguageModel instance
+        :param file_path: path to language corpus file
+        """
         try:
             with open(file_path) as file:
-                corpus_text = file.read()
+                corpus_text: str = file.read()
         except IOError as ioerr:
             raise IOError("Language model file is not valid") from ioerr
         word_list = re.findall("[a-z']+", corpus_text.lower())
         self.WORD_COUNTER = Counter(word_list)
         self.TOTAL_WORDS = sum(self.WORD_COUNTER.values())
 
-    def wordMatch(self, word, elem):
+    @staticmethod
+    def word_match(word: str, elem: str) -> bool:
+        """
+        Check if word pattern from puzzle matches word from corpus
+        :param word: word pattern from puzzle (* = unknown letter)
+        :param elem: word from corpus
+        :return: match status
+        """
         word_length = len(word)
         elem_length = len(elem)
         if word_length != elem_length:
@@ -30,16 +41,28 @@ class LanguageModel:
                 return False
         return True
 
-    def isValidWord(self, word):
+    def is_valid_word(self, word: str) -> bool:
+        """
+        Check if given word exists in the language model
+        :param word: word to check
+        :return: whether word is valid (in language model)
+        """
         return word.lower() in self.WORD_COUNTER
 
-    def getLetterProbabilities(self, word):
+    def get_letter_probabilities(self, word: str) -> Dict[int, List[Tuple[Any, Union[float, Any]]]]:
+        """
+        Produces letter probabilities for unknown letters in given word pattern
+        :param word: word pattern from puzzle
+        :return: letter probabilities dictionary
+            key: index of unknown letter in word pattern
+            value: sorted list of (letter, probability) tuples
+        """
         return_dict = {}
         filtered_word_dict = {
-            k: v for k, v in self.WORD_COUNTER.items() if self.wordMatch(word, k)
+            k: v for k, v in self.WORD_COUNTER.items() if self.word_match(word, k)
         }
         filtered_word_counter = Counter(filtered_word_dict)
-        filtered_total_words = sum(filtered_word_counter.values())
+        # filtered_total_words = sum(filtered_word_counter.values())
         for i in range(len(word)):
             # TODO: replace literal with imported constant
             if word[i] == "*":
@@ -54,7 +77,7 @@ class LanguageModel:
                         i[0], round(i[1]/current_char_total, 3)
                     ) for i in current_char_count_list
                 ]
-                # Sort aphabetically, then by probability
+                # Sort alphabetically, then by probability
                 # sorted is stable sort,
                 # so list is sorted by p, then alphabetically
                 current_char_count_list = sorted(current_char_count_list)
