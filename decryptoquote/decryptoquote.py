@@ -5,7 +5,7 @@
 import re
 import string
 from collections import Counter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from anytree import Node
 
@@ -147,60 +147,97 @@ class LanguageModel:
         return char_count_list
 
 
-# class Puzzle:
-#     def __init__(self, coded, decoded_words=None, coding_dict=None):
-#         # TODO: remove isinstance use (but what can replace it?)
-#         if isinstance(coded, str):
-#             self.coded_words = self.stringToCapsWords(coded)
-#         elif isinstance(coded, list):
-#             self.coded_words = coded
-#         else:
-#             raise TypeError("Bad type for coded quote data, use string or list")
-#         if decoded_words is None:
-#             self.decoded_words = self.initDecodedWords(self.coded_words)
-#         else:
-#             self.decoded_words = decoded_words
-#         if coding_dict is None:
-#             self.coding_dict = self.initCodingDict()
-#         else:
-#             self.coding_dict = coding_dict
-#
-#     def stringToCapsWords(self, input):
-#         input_caps = input.upper()
-#         return re.findall(r"[\w']+|[.,!?;]", input_caps)
-#
-#     def initDecodedWords(self, input):
-#         output_words = []
-#         for word in input:
-#             output_word = ""
-#             for char in word:
-#                 if char.isalpha():
-#                     # TODO: replace literal with imported constant
-#                     output_word += "*"
-#                 else:
-#                     output_word += char
-#             output_words.append(output_word)
-#         return output_words
-#
-#     def initCodingDict(self):
-#         blank_coding_dict = {}
-#         uppercase_list = list(string.ascii_uppercase)
-#         for letter in uppercase_list:
-#             blank_coding_dict[letter] = "*"
-#         return blank_coding_dict
-#
-#     def codingDictIsValid(self, model):
-#         total_words = 0
-#         valid_words = 0
-#         for word in self.decoded_words:
-#             if re.search("[A-Z][A-Z']*"):
-#                 total_words += 1
-#                 if model.is_valid_word():
-#                     valid_words += 1
-#         if total_words/valid_words > 0.75:
-#             return True
-#         else:
-#             return False
+class Puzzle:
+    def __init__(self, coded: Union[str, List[str]],
+                 decoded_words: List[str] = None,
+                 coding_dict: Dict[str, str] = None) -> None:
+        # TODO: remove isinstance use (but what can replace it?)
+        if isinstance(coded, str):
+            self.coded_words = self.string_to_caps_words(coded)
+        elif isinstance(coded, list):
+            self.coded_words = coded
+        else:
+            raise TypeError("Bad type for coded quote data, use string or list")
+        if decoded_words is None:
+            self.decoded_words = self.init_decoded_words(self.coded_words)
+        else:
+            self.decoded_words = decoded_words
+        if coding_dict is None:
+            self.coding_dict = self.init_coding_dict()
+        else:
+            self.coding_dict = coding_dict
+
+    @staticmethod
+    def string_to_caps_words(in_string: str) -> List[str]:
+        """
+        Convert string to list of words in caps
+        :param in_string: input string
+        :return: word list (all caps)
+
+        >>> Puzzle.string_to_caps_words("Svool, R'n z hgirmt!")
+        ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
+        """
+        return re.findall(r"[\w']+|[.,!?;]", in_string.upper())
+
+    @staticmethod
+    def init_decoded_words(in_words: List[str]) -> List[str]:
+        """
+        Given coded words list, produce initial decoded words list
+            (all words and punctuation copied, but with letter placeholders)
+        :param in_words: coded words list
+        :return: decoded words list (with letter placeholders)
+
+        >>> Puzzle.init_decoded_words(['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!'])
+        ['*****', ',', "*'*", '*', '******', '!']
+        """
+        output_words = []
+        for word in in_words:
+            output_word = ""
+            for char in word:
+                if char.isalpha():
+                    # TODO: replace literal with imported constant
+                    output_word += "*"
+                else:
+                    output_word += char
+            output_words.append(output_word)
+        return output_words
+
+    @staticmethod
+    def init_coding_dict() -> Dict[str, str]:
+        """
+        Produce blank coding dictionary
+            keys: capital letters
+            values: * placeholder
+        :return: blank coding dictionary
+
+        >>> Puzzle.init_coding_dict() #doctest: +ELLIPSIS
+        {'A': '*', 'B': '*', 'C': '*', ... 'Z': '*'}
+        """
+        blank_coding_dict = {}
+        uppercase_list = list(string.ascii_uppercase)
+        for letter in uppercase_list:
+            blank_coding_dict[letter] = "*"
+        return blank_coding_dict
+
+    @staticmethod
+    def coding_dict_is_valid(model: LanguageModel) -> bool:
+        """
+        Determine if coding dictionary is valid solution to cryptoquote
+            (> 75% words correct, to account for signature)
+        :param model: language model
+        :return: True if valid solution
+        """
+        total_words = 0
+        valid_words = 0
+        for word in self.decoded_words:
+            if re.search(r'''[A-Z][A-Z']*''', word):
+                total_words += 1
+                if model.is_valid_word():
+                    valid_words += 1
+        if total_words/valid_words > 0.75:
+            return True
+        else:
+            return False
 
 
 # class SearchTree:
