@@ -38,27 +38,27 @@ def test_missing_corpus_file(fs):
     assert str(e.value) == "Language model file is not valid"
 
 def test_isValidWord(model):
-    assert model.isValidWord("this") == True
-    assert model.isValidWord("This") == True
-    assert model.isValidWord("isn't") == True
-    assert model.isValidWord("invalid") == False
+    assert model.is_valid_word("this") == True
+    assert model.is_valid_word("This") == True
+    assert model.is_valid_word("isn't") == True
+    assert model.is_valid_word("invalid") == False
 
 def test_wordMatch(model):
-    assert model.wordMatch("this", "this") == True
-    assert model.wordMatch("isn't", "isn't") == True
-    assert model.wordMatch("th**", "this") == True
-    assert model.wordMatch("th**", "that") == True
-    assert model.wordMatch("is*'*", "isn't") == True
-    assert model.wordMatch("this", "that") == False
-    assert model.wordMatch("th", "this") == False
-    assert model.wordMatch("isnt", "isn't") == False
-    assert model.wordMatch("****", "this") == True
-    assert model.wordMatch("****", "that") == True
+    assert model.word_match("this", "this") == True
+    assert model.word_match("isn't", "isn't") == True
+    assert model.word_match("th**", "this") == True
+    assert model.word_match("th**", "that") == True
+    assert model.word_match("is*'*", "isn't") == True
+    assert model.word_match("this", "that") == False
+    assert model.word_match("th", "this") == False
+    assert model.word_match("isnt", "isn't") == False
+    assert model.word_match("****", "this") == True
+    assert model.word_match("****", "that") == True
 
 def test_getLetterProbabilities(model):
     # expect output lists to be sorted by p first,
     # then alphabetically
-    assert model.getLetterProbabilities("****") == {
+    assert model.get_letter_probabilities("****") == {
         0: [
             ("t", round(5/7, 3)),
             ("a", round(1/7, 3)),
@@ -83,12 +83,12 @@ def test_getLetterProbabilities(model):
             ("o", round(1/7, 3))
         ]
     }
-    assert model.getLetterProbabilities("*h**") == {
+    assert model.get_letter_probabilities("*h**") == {
         0: [("t", 1.000)],
         2: [("i", 1.000)],
         3: [("s", 1.000)]
     }
-    assert model.getLetterProbabilities("***'*") == {
+    assert model.get_letter_probabilities("***'*") == {
         0: [("i", 1.000)],
         1: [("s", 1.000)],
         2: [("n", 1.000)],
