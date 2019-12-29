@@ -15,19 +15,21 @@ from decryptoquote import decryptoquote
 # TODO: save result as JSON, check corpus file hash on future runs and reuse?
 # .isValidWord(word) checks if word exists in LanguageModel, returns bool
 # .getLetterProbabilities(word):
-    # word = partially decoded word, * = undecoded letter
-    # returns dictionary:
-        # keys are index numbers of undecoded letters
-        # value is list of tuples (letter, probability)
+#       word = partially decoded word, * = undecoded letter
+#       returns dictionary:
+#           keys are index numbers of undecoded letters
+#           value is list of tuples (letter, probability)
+
 
 @pytest.fixture()
 def model(fs):
     test_corpus = "This is text. This is also some text. This isn't."
     corpus_file_path = '/test.txt'
-    fs.create_file(corpus_file_path, contents = test_corpus)
+    fs.create_file(corpus_file_path, contents=test_corpus)
     with open(corpus_file_path) as f:
         model = decryptoquote.LanguageModel(corpus_file_path)
     return model
+
 
 def test_missing_corpus_file(fs):
     bad_file_path = '/bad.txt'
@@ -37,25 +39,15 @@ def test_missing_corpus_file(fs):
         decryptoquote.LanguageModel(bad_file_path)
     assert str(e.value) == "Language model file is not valid"
 
-def test_isValidWord(model):
-    assert model.is_valid_word("this") == True
-    assert model.is_valid_word("This") == True
-    assert model.is_valid_word("isn't") == True
-    assert model.is_valid_word("invalid") == False
 
-def test_wordMatch(model):
-    assert model.word_match("this", "this") == True
-    assert model.word_match("isn't", "isn't") == True
-    assert model.word_match("th**", "this") == True
-    assert model.word_match("th**", "that") == True
-    assert model.word_match("is*'*", "isn't") == True
-    assert model.word_match("this", "that") == False
-    assert model.word_match("th", "this") == False
-    assert model.word_match("isnt", "isn't") == False
-    assert model.word_match("****", "this") == True
-    assert model.word_match("****", "that") == True
+def test_is_valid_word(model):
+    assert model.is_valid_word("this") is True
+    assert model.is_valid_word("This") is True
+    assert model.is_valid_word("isn't") is True
+    assert model.is_valid_word("invalid") is False
 
-def test_getLetterProbabilities(model):
+
+def test_get_letter_probabilities(model):
     # expect output lists to be sorted by p first,
     # then alphabetically
     assert model.get_letter_probabilities("****") == {
