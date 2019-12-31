@@ -5,7 +5,7 @@
 import re
 import string
 from collections import Counter
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Optional
 
 from anytree import Node
 
@@ -81,113 +81,160 @@ class LanguageModel:
         """
         return word.lower() in self.WORD_COUNTER
 
-    def get_letter_probabilities(self, word: str) -> \
-            Dict[int, List[Tuple[str, float]]]:
+    def get_possible_word_matches(self, pattern: str) -> List[Tuple[str, ...]]:
         """
-        Produces letter probabilities for unknown letters in given word pattern
-        :param word: word pattern from puzzle
-        :return: letter probabilities dictionary
-            key: index of unknown letter in word pattern
-            value: sorted list of (letter, probability) tuples
-                   (highest p first, alpha on ties)
-        """
-        return_dict = {}
-        matching_word_dict = {
-            k: v for k, v in self.WORD_COUNTER.items() if self.word_match(
-                word, k
-            )
-        }
-        matching_word_counter = Counter(matching_word_dict)
-        # matching_total_words = sum(matching_word_counter.values())
-        for i in range(len(word)):
-            # TODO: replace literal with imported constant
-            if word[i] == "*":
-                current_char_counter = Counter()
-                # go through each wildcard, find possible matches,
-                # add to Counter
-                for matching_word, count in matching_word_counter.items():
-                    matching_char = matching_word[i]
-                    current_char_counter += Counter({matching_char: count})
-                current_char_count_list = list(current_char_counter.items())
-                current_char_total = sum(current_char_counter.values())
-                current_char_count_list = [
-                    (
-                        char_match[0],
-                        round(char_match[1]/current_char_total, 3)
-                    ) for char_match in current_char_count_list
-                ]
-                # Sort alphabetically, then by probability
-                # sorted is stable sort,
-                # so sorting alphabetically first, then by probability
-                # produces list is sorted by p, then alphabetically
-                current_char_count_list = self.sort_char_counts(
-                    current_char_count_list
-                )
-                return_dict.update({i: current_char_count_list})
-        return return_dict
+        Given coded word pattern, produce possible char matches
+        :param pattern: coded word pattern (* = undecoded)
+        :return: list of possible char matches (as tuples)
 
-    @staticmethod
-    def sort_char_counts(char_count_list: List[Tuple[str, float]]) ->\
-            List[Tuple[str, float]]:
+        Example:
+            given "***'*",
+                produces [('I', 'S', 'N', 'T'), ('D', 'O', 'N', 'T'), ...]
+            given "HO*S*",
+                produces [('U', 'E'), ...]
         """
-        Sorts char count list by probability, then alphabetically on ties
-        :param char_count_list: list of character count tuples
-        :return: sorted list
+        # determine indices of wildcards in pattern, store in tuple
+        # find matching words
+        # for each matching word:
+        #   Extract letters at wildcard indices
+        #   Convert to uppercase
+        #   Make tuple
+        #   Append to list
 
-        >>> LanguageModel.sort_char_counts(
-        ...     [('s', 0.1), ('t', 0.5), ('e', 0.1)]
-        ... )
-        [('t', 0.5), ('e', 0.1), ('s', 0.1)]
-        """
-        char_count_list = sorted(char_count_list)
-        char_count_list = sorted(
-            char_count_list,
-            key=lambda element: element[1],
-            reverse=True)
-        return char_count_list
+
+    # def get_letter_probabilities(self, word: str) -> \
+    #         Dict[int, List[Tuple[str, float]]]:
+    #     """
+    #     Produces letter probabilities for unknown letters in given word pattern
+    #     :param word: word pattern from puzzle
+    #     :return: letter probabilities dictionary
+    #         key: index of unknown letter in word pattern
+    #         value: sorted list of (letter, probability) tuples
+    #                (highest p first, alpha on ties)
+    #     """
+    #     return_dict = {}
+    #     matching_word_dict = {
+    #         k: v for k, v in self.WORD_COUNTER.items() if self.word_match(
+    #             word, k
+    #         )
+    #     }
+    #     matching_word_counter = Counter(matching_word_dict)
+    #     # matching_total_words = sum(matching_word_counter.values())
+    #     for i in range(len(word)):
+    #         # TODO: replace literal with imported constant
+    #         if word[i] == "*":
+    #             current_char_counter = Counter()
+    #             # go through each wildcard, find possible matches,
+    #             # add to Counter
+    #             for matching_word, count in matching_word_counter.items():
+    #                 matching_char = matching_word[i]
+    #                 current_char_counter += Counter({matching_char: count})
+    #             current_char_count_list = list(current_char_counter.items())
+    #             current_char_total = sum(current_char_counter.values())
+    #             current_char_count_list = [
+    #                 (
+    #                     char_match[0],
+    #                     round(char_match[1]/current_char_total, 3)
+    #                 ) for char_match in current_char_count_list
+    #             ]
+    #             # Sort alphabetically, then by probability
+    #             # sorted is stable sort,
+    #             # so sorting alphabetically first, then by probability
+    #             # produces list is sorted by p, then alphabetically
+    #             current_char_count_list = self.sort_char_counts(
+    #                 current_char_count_list
+    #             )
+    #             return_dict.update({i: current_char_count_list})
+    #     return return_dict
+    #
+    # @staticmethod
+    # def sort_char_counts(char_count_list: List[Tuple[str, float]]) ->\
+    #         List[Tuple[str, float]]:
+    #     """
+    #     Sorts char count list by probability, then alphabetically on ties
+    #     :param char_count_list: list of character count tuples
+    #     :return: sorted list
+    #
+    #     >>> LanguageModel.sort_char_counts(
+    #     ...     [('s', 0.1), ('t', 0.5), ('e', 0.1)]
+    #     ... )
+    #     [('t', 0.5), ('e', 0.1), ('s', 0.1)]
+    #     """
+    #     char_count_list = sorted(char_count_list)
+    #     char_count_list = sorted(
+    #         char_count_list,
+    #         key=lambda element: element[1],
+    #         reverse=True)
+    #     return char_count_list
+
+
+
 
 
 class Puzzle:
-    def __init__(self, coded: Union[str, List[str]],
-                 decoded_words: List[str] = None,
-                 coding_dict: Dict[str, str] = None) -> None:
+    """
+    Data type for cryptoquote puzzle
+    :param coding_dict: dict of coded letters and matching decoded letters
+    :param coded_quote_words: list of original words in cryptoquote
+    :param decoded_quote_words: list of words being decoded (* = unknown letter)
+    :param coded_author_words: list of words in author part of cryptoquote
+    :param decoded_author_words: list of author part words being decoded
+    """
+    def __init__(self,
+                 coding_dict: Dict[str, str],
+                 coded_quote_words: List[str],
+                 decoded_quote_words: List[str],
+                 coded_author_words: Optional[List[str]] = None,
+                 decoded_author_words: Optional[List[str]] = None
+                 ) -> None:
         # TODO: remove isinstance use (but what can replace it?)
-        if isinstance(coded, str):
-            self.coded_words = self.string_to_caps_words(coded)
-        elif isinstance(coded, list):
-            self.coded_words = coded
-        else:
-            raise TypeError("Bad type for coded quote data, use string or list")
-        if decoded_words is None:
-            self.decoded_words = self.init_decoded_words(self.coded_words)
-        else:
-            self.decoded_words = decoded_words
-        if coding_dict is None:
-            self.coding_dict = self.init_coding_dict()
-        else:
-            self.coding_dict = coding_dict
+        self.coding_dict = coding_dict
+        self.coded_quote_words = coded_quote_words
+        self.decoded_quote_words = decoded_quote_words
+        self.coded_author_words = coded_author_words
+        self.decoded_author_words = decoded_author_words
 
-    @staticmethod
-    def string_to_caps_words(in_string: str) -> List[str]:
+
+class PuzzleFactory:
+    def make_inital_puzzle(self,
+                           coded_quote: str,
+                           coded_author: str = None) -> Puzzle:
+        coded_quote_words = self.string_to_caps_words(coded_quote)
+        decoded_quote_words = self.init_decoded_words(coded_quote_words)
+        coding_dict = self.init_coding_dict()
+        if coded_author is not None:
+            coded_author_words = self.string_to_caps_words(
+                coded_author
+            )
+            decoded_author_words = self.init_decoded_words(coded_author_words)
+            puzzle = Puzzle(coding_dict, coded_quote_words, decoded_quote_words,
+                            coded_author_words, decoded_author_words)
+            return puzzle
+        else:
+            puzzle = Puzzle(coding_dict, coded_quote_words, decoded_quote_words)
+            return puzzle
+
+    def string_to_caps_words(self, in_string: str) -> List[str]:
         """
         Convert string to list of words in caps
         :param in_string: input string
         :return: word list (all caps)
 
-        >>> Puzzle.string_to_caps_words("Svool, R'n z hgirmt!")
+        >>> self.string_to_caps_words("Svool, R'n z hgirmt!")
         ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         """
         return re.findall(r"[\w']+|[.,!?;]", in_string.upper())
 
-    @staticmethod
-    def init_decoded_words(in_words: List[str]) -> List[str]:
+    def init_decoded_words(self, in_words: List[str]) -> List[str]:
         """
         Given coded words list, produce initial decoded words list
             (all words and punctuation copied, but with letter placeholders)
         :param in_words: coded words list
         :return: decoded words list (with letter placeholders)
 
-        >>> Puzzle.init_decoded_words(['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!'])
+        >>> self.init_decoded_words(
+        ...     ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
+        ... )
         ['*****', ',', "*'*", '*', '******', '!']
         """
         output_words = []
@@ -202,15 +249,14 @@ class Puzzle:
             output_words.append(output_word)
         return output_words
 
-    @staticmethod
-    def init_coding_dict() -> Dict[str, str]:
+    def init_coding_dict(self) -> Dict[str, str]:
         """
         Produce blank coding dictionary
             keys: capital letters
             values: * placeholder
         :return: blank coding dictionary
 
-        >>> Puzzle.init_coding_dict() #doctest: +ELLIPSIS
+        >>> PuzzleFactory.init_coding_dict() #doctest: +ELLIPSIS
         {'A': '*', 'B': '*', 'C': '*', ... 'Z': '*'}
         """
         blank_coding_dict = {}
@@ -219,29 +265,12 @@ class Puzzle:
             blank_coding_dict[letter] = "*"
         return blank_coding_dict
 
-    @staticmethod
-    def coding_dict_is_valid(model: LanguageModel) -> bool:
-        """
-        Determine if coding dictionary is valid solution to cryptoquote
-            (> 75% words correct, to account for signature)
-        :param model: language model
-        :return: True if valid solution
-        """
-        total_words = 0
-        valid_words = 0
-        for word in self.decoded_words:
-            if re.search(r'''[A-Z][A-Z']*''', word):
-                total_words += 1
-                if model.is_valid_word():
-                    valid_words += 1
-        if total_words/valid_words > 0.75:
-            return True
-        else:
-            return False
-
 
 # class SearchTree:
-#     def __init__(self, coded_quote):
+#     '''
+#
+#     '''
+#     def __init__(self, coded_quote: str) -> None:
 #         self.__nodes = []
 #         self.__current_node_index = 0
 #         self.__nodes.append(
@@ -281,6 +310,7 @@ def decryptQuote(coded_quote):
         # Drop down to next child with OK = "Maybe"
             # If no available children, set OK to "No" and go to parent
     return coded_quote
+
 
 if __name__ == "__main__":
     import doctest
