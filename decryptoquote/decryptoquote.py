@@ -129,8 +129,6 @@ class LanguageModel:
             x for x in words if self.word_match(pattern.upper(), x)
         ]
 
-
-
     # def get_letter_probabilities(self, word: str) -> \
     #         Dict[int, List[Tuple[str, float]]]:
     #     """
@@ -197,9 +195,6 @@ class LanguageModel:
     #     return char_count_list
 
 
-
-
-
 class Puzzle:
     """
     Data type for cryptoquote puzzle
@@ -249,7 +244,8 @@ class PuzzleFactory:
         :param in_string: input string
         :return: word list (all caps)
 
-        >>> self.string_to_caps_words("Svool, R'n z hgirmt!")
+        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory.string_to_caps_words("Svool, R'n z hgirmt!")
         ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         """
         return re.findall(r"[\w']+|[.,!?;]", in_string.upper())
@@ -261,7 +257,8 @@ class PuzzleFactory:
         :param in_words: coded words list
         :return: decoded words list (with letter placeholders)
 
-        >>> self.init_decoded_words(
+        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory.init_decoded_words(
         ...     ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         ... )
         ['*****', ',', "*'*", '*', '******', '!']
@@ -285,7 +282,8 @@ class PuzzleFactory:
             values: * placeholder
         :return: blank coding dictionary
 
-        >>> PuzzleFactory.init_coding_dict() #doctest: +ELLIPSIS
+        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory.init_coding_dict() #doctest: +ELLIPSIS
         {'A': '*', 'B': '*', 'C': '*', ... 'Z': '*'}
         """
         blank_coding_dict = {}
