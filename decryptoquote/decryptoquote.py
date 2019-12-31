@@ -33,13 +33,13 @@ class LanguageModel:
         :return: list of words in corpus
 
         >>> LanguageModel.word_lister("This is also some text. This isn't.")
-        ['this', 'is', 'also', 'some', 'text', 'this', "isn't"]
+        ['THIS', 'IS', 'ALSO', 'SOME', 'TEXT', 'THIS', "ISN'T"]
         >>> LanguageModel.word_lister("")
         []
         >>> LanguageModel.word_lister(".,:;")
         []
         """
-        return re.findall("[a-z']+", corpus.lower())
+        return re.findall("[A-Z']+", corpus.upper())
 
     @staticmethod
     def word_match(word: str, elem: str) -> bool:
@@ -79,9 +79,9 @@ class LanguageModel:
         :param word: word to check
         :return: whether word is valid (in language model)
         """
-        return word.lower() in self.WORD_COUNTER
+        return word.upper() in self.WORD_COUNTER
 
-    def get_possible_word_matches(self, pattern: str) -> List[Tuple[str, ...]]:
+    def get_possible_word_matches(self, pattern: str) -> List[List[str]]:
         """
         Given coded word pattern, produce possible char matches
         :param pattern: coded word pattern (* = undecoded)
@@ -94,12 +94,41 @@ class LanguageModel:
                 produces [('U', 'E'), ...]
         """
         # determine indices of wildcards in pattern, store in tuple
+        wildcard_pos = []
+        for i in range(len(pattern)):
+            if pattern[i] is "*":
+                wildcard_pos.append(i)
         # find matching words
+        matching_words = self.get_matching_words(pattern)
         # for each matching word:
-        #   Extract letters at wildcard indices
-        #   Convert to uppercase
-        #   Make tuple
-        #   Append to list
+        match_list = []
+        for word in matching_words:
+            l = []
+            for i in wildcard_pos:
+                #   Extract letters at wildcard indices
+                #   Convert to uppercase
+                l.append(word[i].upper())
+            #   Make tuple
+            #   Append to list
+            match_list.append(l)
+        return match_list
+
+    def get_matching_words(self, pattern: str) -> List[str]:
+        """
+        Produce list of matching words, ordered by frequency, then alpha
+        :param pattern: word pattern (* = unknown)
+        :return: matching word list
+        """
+        word_counter = sorted(list(self.WORD_COUNTER.items()))
+        word_counter = sorted(
+            word_counter,
+            key=lambda element: element[1],
+            reverse=True)
+        words = [x[0] for x in word_counter]
+        return [
+            x for x in words if self.word_match(pattern.upper(), x)
+        ]
+
 
 
     # def get_letter_probabilities(self, word: str) -> \

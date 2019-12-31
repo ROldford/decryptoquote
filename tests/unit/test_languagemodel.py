@@ -31,6 +31,13 @@ def model(fs):
     return model
 
 
+def test_model_words(model):
+    assert list(model.WORD_COUNTER.items()) == [
+        ('THIS', 3), ('IS', 2), ('TEXT', 2),
+        ('ALSO', 1), ('SOME', 1), ("ISN'T", 1)
+    ]
+
+
 def test_missing_corpus_file(fs):
     bad_file_path = '/bad.txt'
     real_file_path = '/real.txt'
@@ -49,16 +56,22 @@ def test_is_valid_word(model):
 
 def test_get_possible_word_matches(model):
     assert model.get_possible_word_matches("***'*") == [
-        ('I', 'S', 'N', 'T')
+        ['I', 'S', 'N', 'T']
     ]
     assert model.get_possible_word_matches("T***") == [
-        ('H', 'I', 'S'),
-        ('E', 'X', 'T')
+        ['H', 'I', 'S'],
+        ['E', 'X', 'T']
     ]
     assert model.get_possible_word_matches("A*") == []
     assert model.get_possible_word_matches("i*") == [
-        ('S')
+        ['S']
     ]
+
+
+def test_get_matching_words(model):
+    assert model.get_matching_words("T***") == ["THIS", "TEXT"]
+    assert model.get_matching_words("i*") == ["IS"]
+    assert model.get_matching_words("***'*") == ["ISN'T"]
 
 
 # def test_get_letter_probabilities(model):
