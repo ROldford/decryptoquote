@@ -47,42 +47,56 @@ def test_is_valid_word(model):
     assert model.is_valid_word("invalid") is False
 
 
-def test_get_letter_probabilities(model):
-    # expect output lists to be sorted by p first,
-    # then alphabetically
-    assert model.get_letter_probabilities("****") == {
-        0: [
-            ("t", round(5/7, 3)),
-            ("a", round(1/7, 3)),
-            ("s", round(1/7, 3))
-        ],
-        1: [
-            ("h", round(3/7, 3)),
-            ("e", round(2/7, 3)),
-            ("l", round(1/7, 3)),
-            ("o", round(1/7, 3))
-        ],
-        2: [
-            ("i", round(3/7, 3)),
-            ("x", round(2/7, 3)),
-            ("m", round(1/7, 3)),
-            ("s", round(1/7, 3))
-        ],
-        3: [
-            ("s", round(3/7, 3)),
-            ("t", round(2/7, 3)),
-            ("e", round(1/7, 3)),
-            ("o", round(1/7, 3))
-        ]
-    }
-    assert model.get_letter_probabilities("*h**") == {
-        0: [("t", 1.000)],
-        2: [("i", 1.000)],
-        3: [("s", 1.000)]
-    }
-    assert model.get_letter_probabilities("***'*") == {
-        0: [("i", 1.000)],
-        1: [("s", 1.000)],
-        2: [("n", 1.000)],
-        4: [("t", 1.000)],
-    }
+def test_get_possible_word_matches(model):
+    assert model.get_possible_word_matches("***'*") == [
+        ('I', 'S', 'N', 'T')
+    ]
+    assert model.get_possible_word_matches("T***") == [
+        ('H', 'I', 'S'),
+        ('E', 'X', 'T')
+    ]
+    assert model.get_possible_word_matches("A*") == []
+    assert model.get_possible_word_matches("i*") == [
+        ('S')
+    ]
+
+
+# def test_get_letter_probabilities(model):
+#     # expect output lists to be sorted by p first,
+#     # then alphabetically
+#     assert model.get_letter_probabilities("****") == {
+#         0: [
+#             ("t", round(5/7, 3)),
+#             ("a", round(1/7, 3)),
+#             ("s", round(1/7, 3))
+#         ],
+#         1: [
+#             ("h", round(3/7, 3)),
+#             ("e", round(2/7, 3)),
+#             ("l", round(1/7, 3)),
+#             ("o", round(1/7, 3))
+#         ],
+#         2: [
+#             ("i", round(3/7, 3)),
+#             ("x", round(2/7, 3)),
+#             ("m", round(1/7, 3)),
+#             ("s", round(1/7, 3))
+#         ],
+#         3: [
+#             ("s", round(3/7, 3)),
+#             ("t", round(2/7, 3)),
+#             ("e", round(1/7, 3)),
+#             ("o", round(1/7, 3))
+#         ]
+#     }
+#     assert model.get_letter_probabilities("*h**") == {
+#         0: [("t", 1.000)],
+#         2: [("i", 1.000)],
+#         3: [("s", 1.000)]
+#     }
+#     assert model.get_letter_probabilities("***'*") == {
+#         0: [("i", 1.000)],
+#         1: [("s", 1.000)],
+#         2: [("n", 1.000)],
+#         4: [("t", 1.000)],
+#     }
