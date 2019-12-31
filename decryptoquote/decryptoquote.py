@@ -293,6 +293,10 @@ class PuzzleFactory:
         return blank_coding_dict
 
 
+# do i need this?
+# since i'm using worklist and generating children,
+# i can just prepend to worklist
+# so i might just need main fn to store List[Puzzle]
 # class SearchTree:
 #     '''
 #
@@ -315,27 +319,17 @@ class PuzzleFactory:
 def decryptQuote(coded_quote):
     # language_model = LanguageModel("bigtext.txt")
     search_tree = SearchTree(coded_quote_words)
-    # Loop until done:
-        # Check validity of current node's decoding dict
-            # Valid if >95% of all fully decoded words (except last 2)...
-            # ...match words in bigtext corpus
-            # If not valid, set OK flag to "NO" and go to parent
-            # If so, and coding dict is not complete, continue
-            # If so, and coding dict is complete, you're done!
-        # Generate children if none present
-            # Find all lowest score words to check
-                # 1 point per letter, 0.5 points per undecoded letter
-                # -2 points for apostrophe
-            # For each lowest score word:
-                # For each undecoded letter:
-                    # Compare word with bigtext corpus
-                    # Generate children for decodings of letter (>20% chance)
-                        # OK flag = "Maybe"
-                        # Update coding_dict
-                        # Use dict to update plaintext_words
-        # If no children can be generated, set OK to "No" and go to parent
-        # Drop down to next child with OK = "Maybe"
-            # If no available children, set OK to "No" and go to parent
+    # genrec search tree loop with worklist (?)
+    #   Check if this node has solved puzzle, return it if so
+    #       Puzzle.is_solved()
+    #   If not, make any possible children and append to front of worklist
+    #       Puzzle.get_next_word_to_decode()
+    #       LanguageModel.get_possible_word_matches()
+    #       PuzzleFactory.make_puzzles_from_match()
+    #       Might need Match class to store index of next_word
+    #           and chars to replace * placeholders
+    #           (along with their indices)
+    #   Try next node in worklist
     return coded_quote
 
 
