@@ -7,8 +7,6 @@ import string
 from collections import Counter
 from typing import Dict, List, Tuple, Optional
 
-from anytree import Node
-
 
 class LanguageModel:
     def __init__(self, file_path: str) -> None:
@@ -219,7 +217,8 @@ class Puzzle:
         self.decoded_author_words = decoded_author_words
 
 
-class PuzzleFactory:
+    def get_solution_string(self) -> str:
+class PuzzleTree:
     def make_inital_puzzle(self,
                            coded_quote: str,
                            coded_author: str = None) -> Puzzle:
@@ -244,7 +243,7 @@ class PuzzleFactory:
         :param in_string: input string
         :return: word list (all caps)
 
-        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory = PuzzleTree()
         >>> puzzle_factory.string_to_caps_words("Svool, R'n z hgirmt!")
         ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         """
@@ -257,7 +256,7 @@ class PuzzleFactory:
         :param in_words: coded words list
         :return: decoded words list (with letter placeholders)
 
-        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory = PuzzleTree()
         >>> puzzle_factory.init_decoded_words(
         ...     ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         ... )
@@ -282,7 +281,7 @@ class PuzzleFactory:
             values: * placeholder
         :return: blank coding dictionary
 
-        >>> puzzle_factory = PuzzleFactory()
+        >>> puzzle_factory = PuzzleTree()
         >>> puzzle_factory.init_coding_dict() #doctest: +ELLIPSIS
         {'A': '*', 'B': '*', 'C': '*', ... 'Z': '*'}
         """
@@ -293,39 +292,16 @@ class PuzzleFactory:
         return blank_coding_dict
 
 
-# do i need this?
-# since i'm using worklist and generating children,
-# i can just prepend to worklist
-# so i might just need main fn to store List[Puzzle]
-# class SearchTree:
-#     '''
-#
-#     '''
-#     def __init__(self, coded_quote: str) -> None:
-#         self.__nodes = []
-#         self.__current_node_index = 0
-#         self.__nodes.append(
-#             Node(
-#                 self.__current_node_index,
-#                 puzzle = Puzzle(coded_quote),
-#                 ok_flag = "Maybe"
-#             )
-#         )
-#
-#     def getCurrentNode(self):
-#         return self.__nodes[self.__current_node_index]
-
-
-def decryptQuote(coded_quote):
-    # language_model = LanguageModel("bigtext.txt")
-    search_tree = SearchTree(coded_quote_words)
+def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
+    language_model = LanguageModel("bigtext.txt")
+    puzzle_tree = PuzzleTree(coded_quote, coded_author)
     # genrec search tree loop with worklist (?)
     #   Check if this node has solved puzzle, return it if so
     #       Puzzle.is_solved()
     #   If not, make any possible children and append to front of worklist
     #       Puzzle.get_next_word_to_decode()
     #       LanguageModel.get_possible_word_matches()
-    #       PuzzleFactory.make_puzzles_from_match()
+    #       PuzzleTree.make_puzzles_from_match()
     #       Might need Match class to store index of next_word
     #           and chars to replace * placeholders
     #           (along with their indices)

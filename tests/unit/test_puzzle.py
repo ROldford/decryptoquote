@@ -54,7 +54,7 @@ coding_dict: Dict[str, Dict[str, str]] = {
 
 @pytest.fixture()
 def puzzles():
-    puzzle_factory = decryptoquote.PuzzleFactory()
+    puzzle_factory = decryptoquote.PuzzleTree()
     puzzles_dict = {
         "author": {
             "blank": puzzle_factory.make_inital_puzzle(

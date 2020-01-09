@@ -18,4 +18,3 @@ pytest-cov = "*"
 
 [packages]
 decryptoquote = {path = ".",editable = true}
-anytree = "*"
