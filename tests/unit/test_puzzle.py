@@ -140,19 +140,3 @@ def test_init_puzzle(puzzles):
            == decoded_quote["in_progress"]
     assert puzzles["no_author"]["in_progress"].coding_dict \
            == coding_dict["in_progress"]
-
-
-# def test_coding_dict_is_valid(model, puzzles):
-#     puzzle_wrong = decryptoquote.Puzzle(
-#         test_coded_quote_words,
-#         ['OELLH', ',', "I'M", 'A', 'STRINK', '!'],
-#         {
-#             "A": "Z", "B": "Y", "C": "X", "D": "W", "E": "V",
-#             "F": "U", "G": "T", "H": "S", "I": "R", "J": "Q",
-#             "K": "P", "L": "H", "M": "N", "N": "M", "O": "L",
-#             "P": "G", "Q": "J", "R": "I", "S": "O", "T": "K",
-#             "U": "F", "V": "E", "W": "D", "X": "C", "Y": "B", "Z": "A"
-#         }
-#     )
-#     assert puzzles["finished"].coding_dict_is_valid(model) is True
-#     assert puzzle_wrong.coding_dict_is_valid(model) is False

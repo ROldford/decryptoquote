@@ -216,8 +216,13 @@ class Puzzle:
         self.coded_author_words = coded_author_words
         self.decoded_author_words = decoded_author_words
 
+    def is_solved(self) -> bool:
+        pass
 
     def get_solution_string(self) -> str:
+        pass
+
+
 class PuzzleTree:
     """
     Data type for puzzle tree
@@ -316,8 +321,13 @@ def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
     language_model = LanguageModel("bigtext.txt")
     puzzle_tree = PuzzleTree(coded_quote, coded_author)
     # genrec search tree loop with worklist (?)
-    #   Check if this node has solved puzzle, return it if so
-    #       Puzzle.is_solved()
+    while true:
+        #   Check if this node has solved puzzle, return it if so
+        current_puzzle: Puzzle = PuzzleTree.worklist.pop(0)
+        if current_puzzle.is_solved():
+            return current_puzzle.get_solution_string()
+        else:
+            return coded_quote
     #   If not, make any possible children and append to front of worklist
     #       Puzzle.get_next_word_to_decode()
     #       LanguageModel.get_possible_word_matches()
