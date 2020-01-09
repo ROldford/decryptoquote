@@ -219,6 +219,21 @@ class Puzzle:
 
     def get_solution_string(self) -> str:
 class PuzzleTree:
+    """
+    Data type for puzzle tree
+    Holds puzzle worklist, generates child states of given puzzle
+    :param coded_quote: quote portion of cryptoquote
+    :param coded_author: optional author portion of cryptoquote
+    """
+    worklist = []
+
+    def __init__(self,
+                 coded_quote: str,
+                 coded_author: str = None) -> None:
+        self.worklist.append(
+            self.make_inital_puzzle(coded_quote, coded_author)
+        )
+
     def make_inital_puzzle(self,
                            coded_quote: str,
                            coded_author: str = None) -> Puzzle:
@@ -236,6 +251,11 @@ class PuzzleTree:
         else:
             puzzle = Puzzle(coding_dict, coded_quote_words, decoded_quote_words)
             return puzzle
+
+    def make_puzzles_from_matches(self,
+                                  puzzle: Puzzle,
+                                  matches: object) -> List[Puzzle]:
+        pass
 
     def string_to_caps_words(self, in_string: str) -> List[str]:
         """
