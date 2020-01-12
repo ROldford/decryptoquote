@@ -227,7 +227,36 @@ class Puzzle:
         return True
 
     def get_solution_string(self) -> str:
-        pass
+        """
+        Converts decoded quote/author word lists into single string
+        """
+        author_string: str = ""
+        quote_string: str = self.word_list_to_string(self.decoded_quote_words)
+        if self.decoded_author_words is not None:
+            author_string = " - " + self.word_list_to_string(
+                self.decoded_author_words
+            )
+        return quote_string + author_string
+
+    @staticmethod
+    def word_list_to_string(word_list: List[str]) -> str:
+        """
+        Converts word list to string, respecting spacing around punctuation
+        :param word_list: list of words (with punctuation)
+        :return: sentence string with proper spacing
+
+        >>> Puzzle.word_list_to_string(
+        ...     ['HELLO', ',', "I'M", 'A', 'STRING', '!'])
+        "HELLO, I'M A STRING!"
+        """
+        return_string: str = ""
+        SPACE: str = " "
+        for word in word_list:
+            if re.match(r"[,.!]", word):
+                return_string = return_string + word
+            else:
+                return_string = return_string + SPACE + word
+        return return_string.lstrip(SPACE)
 
 
 class PuzzleTree:
