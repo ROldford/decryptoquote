@@ -59,12 +59,14 @@ coding_dict: Dict[str, Dict[str, str]] = {
 
 @pytest.fixture()
 def puzzles():
-    puzzle_factory = decryptoquote.PuzzleTree()
     puzzles_dict = {
         AUTHOR: {
-            BLANK: puzzle_factory.make_inital_puzzle(
-                test_string,
-                test_author
+            BLANK: decryptoquote.Puzzle(
+                coding_dict[BLANK],
+                test_coded_quote_words,
+                decoded_quote[BLANK],
+                test_coded_author_words,
+                decoded_author[BLANK]
             ),
             IN_PROGRESS: decryptoquote.Puzzle(
                 coding_dict[IN_PROGRESS],
@@ -82,8 +84,10 @@ def puzzles():
             )
         },
         NO_AUTHOR: {
-            BLANK: puzzle_factory.make_inital_puzzle(
-                test_string
+            BLANK: decryptoquote.Puzzle(
+                coding_dict[BLANK],
+                test_coded_quote_words,
+                decoded_quote[BLANK]
             ),
             IN_PROGRESS: decryptoquote.Puzzle(
                 coding_dict[IN_PROGRESS],
