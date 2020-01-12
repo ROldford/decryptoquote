@@ -7,6 +7,7 @@ import string
 from collections import Counter
 from typing import Dict, List, Tuple, Optional
 
+# TODO: make placeholder char constant
 
 class LanguageModel:
     def __init__(self, file_path: str) -> None:
@@ -217,7 +218,14 @@ class Puzzle:
         self.decoded_author_words = decoded_author_words
 
     def is_solved(self) -> bool:
-        pass
+        """
+        Returns true if all letters have been decoded
+        Only works if PuzzleTree only makes new Puzzles with real English words
+        """
+        for value in self.coding_dict.values():
+            if value == "*":
+                return False
+        return True
 
     def get_solution_string(self) -> str:
         pass
@@ -230,7 +238,7 @@ class PuzzleTree:
     :param coded_quote: quote portion of cryptoquote
     :param coded_author: optional author portion of cryptoquote
     """
-    worklist = []
+    worklist: List[Puzzle] = []
 
     def __init__(self,
                  coded_quote: str,

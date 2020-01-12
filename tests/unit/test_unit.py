@@ -4,7 +4,6 @@
 """Unit tests for `decryptoquote` package."""
 
 import pytest
-from anytree import Node
 
 from decryptoquote import decryptoquote
 
