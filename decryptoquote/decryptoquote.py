@@ -210,7 +210,6 @@ class Puzzle:
                  coded_author_words: Optional[List[str]] = None,
                  decoded_author_words: Optional[List[str]] = None
                  ) -> None:
-        # TODO: remove isinstance use (but what can replace it?)
         self.coding_dict = coding_dict
         self.coded_quote_words = coded_quote_words
         self.decoded_quote_words = decoded_quote_words
@@ -270,27 +269,27 @@ class PuzzleTree:
                                   matches: object) -> List[Puzzle]:
         pass
 
-    def string_to_caps_words(self, in_string: str) -> List[str]:
+    @staticmethod
+    def string_to_caps_words(in_string: str) -> List[str]:
         """
         Convert string to list of words in caps
         :param in_string: input string
         :return: word list (all caps)
 
-        >>> puzzle_factory = PuzzleTree()
-        >>> puzzle_factory.string_to_caps_words("Svool, R'n z hgirmt!")
+        >>> PuzzleTree.string_to_caps_words("Svool, R'n z hgirmt!")
         ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         """
         return re.findall(r"[\w']+|[.,!?;]", in_string.upper())
 
-    def init_decoded_words(self, in_words: List[str]) -> List[str]:
+    @staticmethod
+    def init_decoded_words(in_words: List[str]) -> List[str]:
         """
         Given coded words list, produce initial decoded words list
             (all words and punctuation copied, but with letter placeholders)
         :param in_words: coded words list
         :return: decoded words list (with letter placeholders)
 
-        >>> puzzle_factory = PuzzleTree()
-        >>> puzzle_factory.init_decoded_words(
+        >>> PuzzleTree.init_decoded_words(
         ...     ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
         ... )
         ['*****', ',', "*'*", '*', '******', '!']
@@ -307,15 +306,15 @@ class PuzzleTree:
             output_words.append(output_word)
         return output_words
 
-    def init_coding_dict(self) -> Dict[str, str]:
+    @staticmethod
+    def init_coding_dict() -> Dict[str, str]:
         """
         Produce blank coding dictionary
             keys: capital letters
             values: * placeholder
         :return: blank coding dictionary
 
-        >>> puzzle_factory = PuzzleTree()
-        >>> puzzle_factory.init_coding_dict() #doctest: +ELLIPSIS
+        >>> PuzzleTree.init_coding_dict() #doctest: +ELLIPSIS
         {'A': '*', 'B': '*', 'C': '*', ... 'Z': '*'}
         """
         blank_coding_dict = {}
