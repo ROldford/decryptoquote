@@ -112,41 +112,30 @@ def model(fs):
 
 
 def test_init_puzzle(puzzles):
-    assert puzzles[AUTHOR][BLANK].coded_quote_words \
-           == test_coded_quote_words
-    assert puzzles[AUTHOR][BLANK].decoded_quote_words \
-           == decoded_quote[BLANK]
-    assert puzzles[AUTHOR][BLANK].coded_author_words \
-           == test_coded_author_words
-    assert puzzles[AUTHOR][BLANK].decoded_author_words \
-           == decoded_author[BLANK]
-    assert puzzles[AUTHOR][BLANK].coding_dict \
-           == coding_dict[BLANK]
+    test_puzzle = puzzles[AUTHOR][BLANK]
+    assert test_puzzle.coded_quote_words == test_coded_quote_words
+    assert test_puzzle.decoded_quote_words == decoded_quote[BLANK]
+    assert test_puzzle.coded_author_words == test_coded_author_words
+    assert test_puzzle.decoded_author_words == decoded_author[BLANK]
+    assert test_puzzle.coding_dict == coding_dict[BLANK]
 
-    assert puzzles[NO_AUTHOR][BLANK].coded_quote_words \
-           == test_coded_quote_words
-    assert puzzles[NO_AUTHOR][BLANK].decoded_quote_words \
-           == decoded_quote[BLANK]
-    assert puzzles[NO_AUTHOR][BLANK].coding_dict \
-           == coding_dict[BLANK]
+    test_puzzle = puzzles[NO_AUTHOR][BLANK]
+    assert test_puzzle.coded_quote_words == test_coded_quote_words
+    assert test_puzzle.decoded_quote_words == decoded_quote[BLANK]
+    assert test_puzzle.coding_dict == coding_dict[BLANK]
 
-    assert puzzles[AUTHOR][IN_PROGRESS].coded_quote_words \
-           == test_coded_quote_words
-    assert puzzles[AUTHOR][IN_PROGRESS].decoded_quote_words \
-           == decoded_quote[IN_PROGRESS]
-    assert puzzles[AUTHOR][IN_PROGRESS].coded_author_words \
-           == test_coded_author_words
-    assert puzzles[AUTHOR][IN_PROGRESS].decoded_author_words \
-           == decoded_author[IN_PROGRESS]
-    assert puzzles[AUTHOR][IN_PROGRESS].coding_dict \
-           == coding_dict[IN_PROGRESS]
+    test_puzzle = puzzles[AUTHOR][IN_PROGRESS]
+    assert test_puzzle.coded_quote_words == test_coded_quote_words
+    assert test_puzzle.decoded_quote_words == decoded_quote[IN_PROGRESS]
+    assert test_puzzle.coded_author_words == test_coded_author_words
+    assert test_puzzle.decoded_author_words == decoded_author[IN_PROGRESS]
+    assert test_puzzle.coding_dict == coding_dict[IN_PROGRESS]
 
-    assert puzzles[NO_AUTHOR][IN_PROGRESS].coded_quote_words \
-           == test_coded_quote_words
-    assert puzzles[NO_AUTHOR][IN_PROGRESS].decoded_quote_words \
-           == decoded_quote[IN_PROGRESS]
-    assert puzzles[NO_AUTHOR][IN_PROGRESS].coding_dict \
-           == coding_dict[IN_PROGRESS]
+    test_puzzle = puzzles[NO_AUTHOR][IN_PROGRESS]
+    assert test_puzzle.coded_quote_words == test_coded_quote_words
+    assert test_puzzle.decoded_quote_words == decoded_quote[IN_PROGRESS]
+    assert test_puzzle.coding_dict == coding_dict[IN_PROGRESS]
+
 
 def test_is_solved(puzzles):
     assert puzzles[AUTHOR][BLANK].is_solved() is False
@@ -156,8 +145,9 @@ def test_is_solved(puzzles):
     assert puzzles[NO_AUTHOR][IN_PROGRESS].is_solved() is False
     assert puzzles[NO_AUTHOR][FINISHED].is_solved() is True
 
+
 def test_get_solution_string(puzzles):
     assert puzzles[AUTHOR][FINISHED].get_solution_string() \
-           == "HELLO, I'M A STRING! - RYAN"
+        == "HELLO, I'M A STRING! - RYAN"
     assert puzzles[NO_AUTHOR][FINISHED].get_solution_string() \
-           == "HELLO, I'M A STRING!"
+        == "HELLO, I'M A STRING!"
