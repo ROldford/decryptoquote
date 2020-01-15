@@ -21,7 +21,7 @@ AUTHOR = "author"
 NO_AUTHOR = "no-author"
 decoded_quote: Dict[str, List[str]] = {
     BLANK: ['*****', ',', "*'*", '*', '******', '!'],
-    IN_PROGRESS: ['**LL*', ',', "*'*", 'A', '**R***', '!'],
+    IN_PROGRESS: ['*****', ',', "I'M", '*', '***I**', '!'],
     FINISHED: ['HELLO', ',', "I'M", 'A', 'STRING', '!']
 }
 decoded_author: Dict[str, List[str]] = {
@@ -40,9 +40,9 @@ coding_dict: Dict[str, Dict[str, str]] = {
         },
     IN_PROGRESS:
         {
-            "A": "Z", "B": "*", "C": "*", "D": "*", "E": "*",
+            "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
             "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
-            "K": "*", "L": "O", "M": "*", "N": "*", "O": "*",
+            "K": "*", "L": "*", "M": "*", "N": "M", "O": "*",
             "P": "*", "Q": "*", "R": "I", "S": "*", "T": "*",
             "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
         },
@@ -155,3 +155,10 @@ def test_get_solution_string(puzzles):
         == "HELLO, I'M A STRING! - RYAN"
     assert puzzles[NO_AUTHOR][FINISHED].get_solution_string() \
         == "HELLO, I'M A STRING!"
+
+
+def test_get_next_word_to_decode(puzzles):
+    assert puzzles[AUTHOR][BLANK].get_next_word_to_decode() \
+        == [2, "*'*"]
+    assert puzzles[AUTHOR][IN_PROGRESS].get_next_word_to_decode() \
+        == [3, "*"]

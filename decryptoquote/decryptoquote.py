@@ -5,9 +5,11 @@
 import re
 import string
 from collections import Counter
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 
-# TODO: make placeholder char constant
+
+UNKNOWN: str = "*"
+
 
 class LanguageModel:
     def __init__(self, file_path: str) -> None:
@@ -68,7 +70,7 @@ class LanguageModel:
         if word_length != elem_length:
             return False
         for i in range(word_length):
-            if word[i] != "*" and word[i] != elem[i]:
+            if word[i] != UNKNOWN and word[i] != elem[i]:
                 return False
         return True
 
@@ -84,18 +86,18 @@ class LanguageModel:
         """
         Given coded word pattern, produce possible char matches
         :param pattern: coded word pattern (* = undecoded)
-        :return: list of possible char matches (as tuples)
+        :return: list of possible char matches (as lists)
 
         Example:
             given "***'*",
-                produces [('I', 'S', 'N', 'T'), ('D', 'O', 'N', 'T'), ...]
+                produces [['I', 'S', 'N', 'T'], ['D', 'O', 'N', 'T'], ...]
             given "HO*S*",
-                produces [('U', 'E'), ...]
+                produces [['U', 'E'], ...]
         """
-        # determine indices of wildcards in pattern, store in tuple
+        # determine indices of wildcards in pattern, store in list
         wildcard_pos = []
         for i in range(len(pattern)):
-            if pattern[i] is "*":
+            if pattern[i] is UNKNOWN:
                 wildcard_pos.append(i)
         # find matching words
         matching_words = self.get_matching_words(pattern)
@@ -148,7 +150,7 @@ class LanguageModel:
     #     # matching_total_words = sum(matching_word_counter.values())
     #     for i in range(len(word)):
     #         # TODO: replace literal with imported constant
-    #         if word[i] == "*":
+    #         if word[i] == UNKNOWN:
     #             current_char_counter = Counter()
     #             # go through each wildcard, find possible matches,
     #             # add to Counter
@@ -222,7 +224,7 @@ class Puzzle:
         Only works if PuzzleTree only makes new Puzzles with real English words
         """
         for value in self.coding_dict.values():
-            if value == "*":
+            if value == UNKNOWN:
                 return False
         return True
 
@@ -250,13 +252,56 @@ class Puzzle:
         "HELLO, I'M A STRING!"
         """
         return_string: str = ""
-        SPACE: str = " "
+        space: str = " "
         for word in word_list:
             if re.match(r"[,.!]", word):
                 return_string = return_string + word
             else:
-                return_string = return_string + SPACE + word
-        return return_string.lstrip(SPACE)
+                return_string = return_string + space + word
+        return return_string.lstrip(space)
+
+    def get_next_word_to_decode(self) -> List[Union[int, str]]:
+        """
+        Returns next quote word to decode,
+            based on number of remaining unknown letters
+            Words with apostrophes count as less unknown letters
+            Words from author part are not chosen
+        :returns (word index, chosen undecoded word)
+        """
+        min_unknown: int = 50
+        chosen_word: str = ""
+        chosen_index: int = 0
+        for i in range(len(self.decoded_quote_words)):
+            curr_word: str = self.decoded_quote_words[i]
+            curr_unknown: int = self.count_unknown_letters(
+                curr_word
+            )
+            if curr_unknown > 0 and curr_unknown < min_unknown:
+                chosen_index = i
+                chosen_word = curr_word
+                min_unknown = curr_unknown
+        return [chosen_index, chosen_word]
+
+    @staticmethod
+    def count_unknown_letters(word: str) -> int:
+        """
+        Returns count of chars in word matching UNKNOWN char
+            Presence of ' reduces count
+        :param word: cryptoquote word, may be undecoded
+        :return: adjusted count of UNKNOWN char in word
+
+        >>> Puzzle.count_unknown_letters("T**")
+        2
+        >>> Puzzle.count_unknown_letters("THE")
+        0
+        >>> Puzzle.count_unknown_letters("**'*")
+        2
+        """
+        apos_bonus: int = 1
+        if (word.count("'") > 0):
+            return word.count(UNKNOWN) - apos_bonus
+        else:
+            return word.count(UNKNOWN)
 
 
 class PuzzleTree:
@@ -266,7 +311,6 @@ class PuzzleTree:
     :param coded_quote: quote portion of cryptoquote
     :param coded_author: optional author portion of cryptoquote
     """
-    # TODO: make this private
 
     def __init__(self,
                  coded_quote: str,
@@ -330,7 +374,7 @@ class PuzzleTree:
             for char in word:
                 if char.isalpha():
                     # TODO: replace literal with imported constant
-                    output_word += "*"
+                    output_word += UNKNOWN
                 else:
                     output_word += char
             output_words.append(output_word)
@@ -350,7 +394,7 @@ class PuzzleTree:
         blank_coding_dict = {}
         uppercase_list = list(string.ascii_uppercase)
         for letter in uppercase_list:
-            blank_coding_dict[letter] = "*"
+            blank_coding_dict[letter] = UNKNOWN
         return blank_coding_dict
 
     def get_next_puzzle_from_worklist(self) -> Puzzle:
@@ -371,8 +415,13 @@ def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
         if current_puzzle.is_solved():
             return current_puzzle.get_solution_string()
         else:
-            return coded_quote
-    #   If not, make any possible children and append to front of worklist
+            #   If not, make any possible children
+            #   and append to front of worklist
+            next_word: str = current_puzzle.get_next_word_to_decode()
+            matches: List[List[str]] = lang_model.get_possible_word_matches()
+            next_puzzles: List[Puzzle] = puzzle_tree.make_puzzles_from_matches()
+
+
     #       Puzzle.get_next_word_to_decode()
     #       LanguageModel.get_possible_word_matches()
     #       PuzzleTree.make_puzzles_from_match()
