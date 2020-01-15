@@ -339,7 +339,16 @@ class PuzzleTree:
 
     def make_puzzles_from_matches(self,
                                   puzzle: Puzzle,
-                                  matches: object) -> List[Puzzle]:
+                                  index: int,
+                                  matches: List[List[str]]) -> None:
+        """
+        Given possible matches for undecoded word,
+            generates new Puzzles from matches
+            and adds to start of worklist
+        :param puzzle: starting puzzle
+        :param index: index of newly decoded word
+        :param matches: possible matches for decoded word
+        """
         pass
 
     @staticmethod
