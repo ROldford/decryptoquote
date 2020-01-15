@@ -26,7 +26,7 @@ decoded_quote: Dict[str, List[str]] = {
 }
 decoded_author: Dict[str, List[str]] = {
     BLANK: ['****'],
-    IN_PROGRESS: ['R***'],
+    IN_PROGRESS: ['****'],
     FINISHED: ['RYAN']
 }
 coding_dict: Dict[str, Dict[str, str]] = {

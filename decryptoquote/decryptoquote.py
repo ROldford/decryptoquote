@@ -7,7 +7,6 @@ import string
 from collections import Counter
 from typing import Dict, List, Tuple, Optional, Union
 
-
 UNKNOWN: str = "*"
 
 
@@ -417,18 +416,20 @@ def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
         else:
             #   If not, make any possible children
             #   and append to front of worklist
-            next_word: str = current_puzzle.get_next_word_to_decode()
-            matches: List[List[str]] = lang_model.get_possible_word_matches()
-            next_puzzles: List[Puzzle] = puzzle_tree.make_puzzles_from_matches()
-
-
-    #       Puzzle.get_next_word_to_decode()
-    #       LanguageModel.get_possible_word_matches()
+            # TODO: Destructure this into index and word
+            next_word: List[Union[int, str]] = \
+                current_puzzle.get_next_word_to_decode()
+            matches: List[List[str]] = lang_model.get_possible_word_matches(
+                next_word[1]
+            )
+            puzzle_tree.make_puzzles_from_matches(
+                current_puzzle,
+                next_word[0],
+                matches
+            )
     #       PuzzleTree.make_puzzles_from_match()
-    #       Might need Match class to store index of next_word
-    #           and chars to replace * placeholders
-    #           (along with their indices)
     #   Try next node in worklist
+    #   If no next node, puzzle could not be solved
     return coded_quote
 
 
