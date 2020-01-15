@@ -66,18 +66,29 @@ def puzzle_tree() -> Dict[str, PuzzleTree]:
 
 
 def test_make_initial_puzzle(puzzle_tree):
+    assert len(puzzle_tree[AUTHOR].worklist) == 1
     puzzle_author: Puzzle = puzzle_tree[AUTHOR].worklist[0]
     assert puzzle_author.coding_dict == coding_dict[BLANK]
     assert puzzle_author.coded_quote_words == test_coded_quote_words
     assert puzzle_author.coded_author_words == test_coded_author_words
     assert puzzle_author.decoded_quote_words == decoded_quote[BLANK]
     assert puzzle_author.decoded_author_words == decoded_author[BLANK]
+    assert len(puzzle_tree[NO_AUTHOR].worklist) == 1
     puzzle_noauthor: Puzzle = puzzle_tree[NO_AUTHOR].worklist[0]
     assert puzzle_noauthor.coding_dict == coding_dict[BLANK]
     assert puzzle_noauthor.coded_quote_words == test_coded_quote_words
     assert puzzle_noauthor.decoded_quote_words == decoded_quote[BLANK]
 
+def test_get_next_puzzle_from_worklist(puzzle_tree):
+    pt_author: PuzzleTree = puzzle_tree[AUTHOR]
+    first_puzzle: Puzzle = pt_author.get_next_puzzle_from_worklist()
+    assert len(pt_author.worklist) == 0
+    assert first_puzzle.coding_dict == coding_dict[BLANK]
+    with pytest.raises(IndexError):
+        not_puzzle = pt_author.get_next_puzzle_from_worklist()
 
+
+@pytest.mark.xfail
 def test_make_puzzles_from_matches(puzzle_tree):
     assert False
 

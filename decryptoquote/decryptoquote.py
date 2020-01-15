@@ -266,11 +266,12 @@ class PuzzleTree:
     :param coded_quote: quote portion of cryptoquote
     :param coded_author: optional author portion of cryptoquote
     """
-    worklist: List[Puzzle] = []
+    # TODO: make this private
 
     def __init__(self,
                  coded_quote: str,
                  coded_author: str = None) -> None:
+        self.worklist: List[Puzzle] = []
         self.worklist.append(
             self.make_inital_puzzle(coded_quote, coded_author)
         )
@@ -352,14 +353,21 @@ class PuzzleTree:
             blank_coding_dict[letter] = "*"
         return blank_coding_dict
 
+    def get_next_puzzle_from_worklist(self) -> Puzzle:
+        """
+        Gets and removes next puzzle from worklist
+        :return: next puzzle in worklist
+        """
+        return self.worklist.pop(0)
+
 
 def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
-    language_model = LanguageModel("bigtext.txt")
+    lang_model = LanguageModel("bigtext.txt")
     puzzle_tree = PuzzleTree(coded_quote, coded_author)
     # genrec search tree loop with worklist (?)
     while true:
         #   Check if this node has solved puzzle, return it if so
-        current_puzzle: Puzzle = PuzzleTree.worklist.pop(0)
+        current_puzzle: Puzzle = puzzle_tree.get_next_puzzle_from_worklist()
         if current_puzzle.is_solved():
             return current_puzzle.get_solution_string()
         else:
