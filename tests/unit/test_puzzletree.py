@@ -12,7 +12,6 @@ test_string: str = "Svool, R'n z hgirmt!"
 test_coded_quote_words: List[str] = ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
 test_author: str = "Ibzm"
 test_coded_author_words: List[str] = ['IBZM']
-# TODO: turn blank, etc. string literals into constants
 BLANK = "blank"
 IN_PROGRESS = "in_progress"
 FINISHED = "finished"
@@ -89,7 +88,6 @@ def test_get_next_puzzle_from_worklist(puzzle_tree):
 
 
 def test_make_puzzles_from_matches(puzzle_tree):
-    # pytest.fail("stub")
     pt_author: PuzzleTree = puzzle_tree[AUTHOR]
     first_puzzle: Puzzle = pt_author.get_next_puzzle_from_worklist()
     index: int = 2

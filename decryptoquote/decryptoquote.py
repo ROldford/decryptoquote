@@ -13,9 +13,14 @@ UNKNOWN: str = "*"
 class LanguageModel:
     def __init__(self, file_path: str) -> None:
         """
-        Create LanguageModel instance
+        Create LanguageModel instance from given corpus file
+            corpus file is large file of English text, .txt format
         :param file_path: path to language corpus file
+        :exception IOError if corpus file is invalid
         """
+        # TODO: enforce Singleton?
+        # TODO: save result as JSON for reuse if no change in corpus file
+        #       check corpus file hash on future runs
         try:
             with open(file_path) as file:
                 corpus_text: str = file.read()
@@ -84,8 +89,9 @@ class LanguageModel:
     def get_possible_word_matches(self, pattern: str) -> List[List[str]]:
         """
         Given coded word pattern, produce possible char matches
-        :param pattern: coded word pattern (* = undecoded)
+        :param pattern: coded word pattern (with UNKNOWN placeholder)
         :return: list of possible char matches (as lists)
+                    Only includes matches for UNKNOWN
 
         Example:
             given "***'*",
@@ -93,23 +99,16 @@ class LanguageModel:
             given "HO*S*",
                 produces [['U', 'E'], ...]
         """
-        # determine indices of wildcards in pattern, store in list
         wildcard_pos = []
         for i in range(len(pattern)):
             if pattern[i] is UNKNOWN:
                 wildcard_pos.append(i)
-        # find matching words
         matching_words = self.get_matching_words(pattern)
-        # for each matching word:
         match_list = []
         for word in matching_words:
             l = []
             for i in wildcard_pos:
-                #   Extract letters at wildcard indices
-                #   Convert to uppercase
                 l.append(word[i].upper())
-            #   Make tuple
-            #   Append to list
             match_list.append(l)
         return match_list
 
@@ -128,71 +127,6 @@ class LanguageModel:
         return [
             x for x in words if self.word_match(pattern.upper(), x)
         ]
-
-    # def get_letter_probabilities(self, word: str) -> \
-    #         Dict[int, List[Tuple[str, float]]]:
-    #     """
-    #     Produces letter probabilities for unknown letters in given word pattern
-    #     :param word: word pattern from puzzle
-    #     :return: letter probabilities dictionary
-    #         key: index of unknown letter in word pattern
-    #         value: sorted list of (letter, probability) tuples
-    #                (highest p first, alpha on ties)
-    #     """
-    #     return_dict = {}
-    #     matching_word_dict = {
-    #         k: v for k, v in self.WORD_COUNTER.items() if self.word_match(
-    #             word, k
-    #         )
-    #     }
-    #     matching_word_counter = Counter(matching_word_dict)
-    #     # matching_total_words = sum(matching_word_counter.values())
-    #     for i in range(len(word)):
-    #         # TODO: replace literal with imported constant
-    #         if word[i] == UNKNOWN:
-    #             current_char_counter = Counter()
-    #             # go through each wildcard, find possible matches,
-    #             # add to Counter
-    #             for matching_word, count in matching_word_counter.items():
-    #                 matching_char = matching_word[i]
-    #                 current_char_counter += Counter({matching_char: count})
-    #             current_char_count_list = list(current_char_counter.items())
-    #             current_char_total = sum(current_char_counter.values())
-    #             current_char_count_list = [
-    #                 (
-    #                     char_match[0],
-    #                     round(char_match[1]/current_char_total, 3)
-    #                 ) for char_match in current_char_count_list
-    #             ]
-    #             # Sort alphabetically, then by probability
-    #             # sorted is stable sort,
-    #             # so sorting alphabetically first, then by probability
-    #             # produces list is sorted by p, then alphabetically
-    #             current_char_count_list = self.sort_char_counts(
-    #                 current_char_count_list
-    #             )
-    #             return_dict.update({i: current_char_count_list})
-    #     return return_dict
-    #
-    # @staticmethod
-    # def sort_char_counts(char_count_list: List[Tuple[str, float]]) ->\
-    #         List[Tuple[str, float]]:
-    #     """
-    #     Sorts char count list by probability, then alphabetically on ties
-    #     :param char_count_list: list of character count tuples
-    #     :return: sorted list
-    #
-    #     >>> LanguageModel.sort_char_counts(
-    #     ...     [('s', 0.1), ('t', 0.5), ('e', 0.1)]
-    #     ... )
-    #     [('t', 0.5), ('e', 0.1), ('s', 0.1)]
-    #     """
-    #     char_count_list = sorted(char_count_list)
-    #     char_count_list = sorted(
-    #         char_count_list,
-    #         key=lambda element: element[1],
-    #         reverse=True)
-    #     return char_count_list
 
 
 class Puzzle:
@@ -351,12 +285,6 @@ class PuzzleTree:
         """
         new_puzzle_list: List[Puzzle] = []
         for match in matches:
-            # scan through undecoded word and find indices of UNKNOWNs
-            # find chars at those indices in coded word
-            # update coding dict with new letters
-            #   if conflict, match doesn't work, so skip it
-            # update decoded words with new coding
-
             # copies are needed here to avoid mutating the parent,
             # so all child puzzles start from the same parent puzzle
             coding_dict: Dict[str, str] = puzzle.coding_dict.copy()
@@ -364,11 +292,6 @@ class PuzzleTree:
                 puzzle.coded_quote_words.copy()
             decoded_quote_words: List[str] = \
                 puzzle.decoded_quote_words.copy()
-            # coded_author_words: Union[List[str], None] = None
-            # decoded_author_words: Union[List[str], None] = None
-            # if puzzle.coded_author_words is not None:
-            #     coded_author_words = puzzle.coded_author_words.copy()
-            #     decoded_author_words = puzzle.decoded_author_words.copy()
             decoded_word: str = decoded_quote_words[index]
             coded_word: str = coded_quote_words[index]
             i_of_unknowns: List[int] = self.find_indices_of_unknown(
@@ -392,7 +315,6 @@ class PuzzleTree:
                     new_puzzle: Puzzle = Puzzle(coding_dict,
                                                 coded_quote_words,
                                                 decoded_quote_words)
-                    # self.update_worklist(new_puzzle)
                     new_puzzle_list = new_puzzle_list + [new_puzzle]
                 else:
                     coded_author_words = puzzle.coded_author_words.copy()
@@ -403,7 +325,6 @@ class PuzzleTree:
                                                 decoded_quote_words,
                                                 coded_author_words,
                                                 decoded_author_words)
-                    # self.update_worklist(new_puzzle)
                     new_puzzle_list = new_puzzle_list + [new_puzzle]
         self.worklist = new_puzzle_list + self.worklist
 
@@ -437,7 +358,6 @@ class PuzzleTree:
             output_word = ""
             for char in word:
                 if char.isalpha():
-                    # TODO: replace literal with imported constant
                     output_word += UNKNOWN
                 else:
                     output_word += char
@@ -510,7 +430,6 @@ def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
     puzzle_tree = PuzzleTree(coded_quote, coded_author)
     # genrec search tree loop with worklist (?)
     while true:
-        #   Check if this node has solved puzzle, return it if so
         current_puzzle: Puzzle = puzzle_tree.get_next_puzzle_from_worklist()
         if current_puzzle.is_solved():
             return current_puzzle.get_solution_string()
@@ -528,7 +447,6 @@ def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
                 next_word[0],
                 matches
             )
-    #       PuzzleTree.make_puzzles_from_match()
     #   Try next node in worklist
     #   If no next node, puzzle could not be solved
     return coded_quote

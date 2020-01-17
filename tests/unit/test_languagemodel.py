@@ -8,19 +8,6 @@ import pyfakefs
 
 from decryptoquote import decryptoquote
 
-# LanguageModel takes in file path
-# Init reads file at file_path, throws IOError if corpus file is invalid
-# LanguageModel counts instances of each unique word using Counter instance
-# TODO: enforce Singleton?
-# TODO: save result as JSON, check corpus file hash on future runs and reuse?
-# .isValidWord(word) checks if word exists in LanguageModel, returns bool
-# .getLetterProbabilities(word):
-#       word = partially decoded word, * = undecoded letter
-#       returns dictionary:
-#           keys are index numbers of undecoded letters
-#           value is list of tuples (letter, probability)
-
-
 @pytest.fixture()
 def model(fs):
     test_corpus = "This is text. This is also some text. This isn't."
@@ -73,43 +60,3 @@ def test_get_matching_words(model):
     assert model.get_matching_words("i*") == ["IS"]
     assert model.get_matching_words("***'*") == ["ISN'T"]
 
-
-# def test_get_letter_probabilities(model):
-#     # expect output lists to be sorted by p first,
-#     # then alphabetically
-#     assert model.get_letter_probabilities("****") == {
-#         0: [
-#             ("t", round(5/7, 3)),
-#             ("a", round(1/7, 3)),
-#             ("s", round(1/7, 3))
-#         ],
-#         1: [
-#             ("h", round(3/7, 3)),
-#             ("e", round(2/7, 3)),
-#             ("l", round(1/7, 3)),
-#             ("o", round(1/7, 3))
-#         ],
-#         2: [
-#             ("i", round(3/7, 3)),
-#             ("x", round(2/7, 3)),
-#             ("m", round(1/7, 3)),
-#             ("s", round(1/7, 3))
-#         ],
-#         3: [
-#             ("s", round(3/7, 3)),
-#             ("t", round(2/7, 3)),
-#             ("e", round(1/7, 3)),
-#             ("o", round(1/7, 3))
-#         ]
-#     }
-#     assert model.get_letter_probabilities("*h**") == {
-#         0: [("t", 1.000)],
-#         2: [("i", 1.000)],
-#         3: [("s", 1.000)]
-#     }
-#     assert model.get_letter_probabilities("***'*") == {
-#         0: [("i", 1.000)],
-#         1: [("s", 1.000)],
-#         2: [("n", 1.000)],
-#         4: [("t", 1.000)],
-#     }
