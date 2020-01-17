@@ -14,19 +14,19 @@ test_author: str = "Ibzm"
 test_coded_author_words: List[str] = ['IBZM']
 # TODO: turn blank, etc. string literals into constants
 BLANK = "blank"
-# IN_PROGRESS = "in_progress"
-# FINISHED = "finished"
+IN_PROGRESS = "in_progress"
+FINISHED = "finished"
 AUTHOR = "author"
 NO_AUTHOR = "no-author"
 decoded_quote: Dict[str, List[str]] = {
     BLANK: ['*****', ',', "*'*", '*', '******', '!'],
-    # IN_PROGRESS: ['**LL*', ',', "*'*", 'A', '**R***', '!'],
-    # FINISHED: ['HELLO', ',', "I'M", 'A', 'STRING', '!']
+    IN_PROGRESS: ['*****', ',', "I'M", 'A', '***I**', '!'],
+    FINISHED: ['HELLO', ',', "I'M", 'A', 'STRING', '!']
 }
 decoded_author: Dict[str, List[str]] = {
     BLANK: ['****'],
-    # IN_PROGRESS: ['R***'],
-    # FINISHED: ['RYAN']
+    IN_PROGRESS: ['**A*'],
+    FINISHED: ['RYAN']
 }
 coding_dict: Dict[str, Dict[str, str]] = {
     BLANK:
@@ -37,22 +37,22 @@ coding_dict: Dict[str, Dict[str, str]] = {
             "P": "*", "Q": "*", "R": "*", "S": "*", "T": "*",
             "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
         },
-    # IN_PROGRESS:
-    #     {
-    #         "A": "Z", "B": "*", "C": "*", "D": "*", "E": "*",
-    #         "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
-    #         "K": "*", "L": "O", "M": "*", "N": "*", "O": "*",
-    #         "P": "*", "Q": "*", "R": "I", "S": "*", "T": "*",
-    #         "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "*"
-    #     },
-    # FINISHED:
-    #     {
-    #         "A": "Z", "B": "Y", "C": "X", "D": "W", "E": "V",
-    #         "F": "U", "G": "T", "H": "S", "I": "R", "J": "Q",
-    #         "K": "P", "L": "O", "M": "N", "N": "M", "O": "L",
-    #         "P": "K", "Q": "J", "R": "I", "S": "H", "T": "G",
-    #         "U": "F", "V": "E", "W": "D", "X": "C", "Y": "B", "Z": "A"
-    #     }
+    IN_PROGRESS:
+        {
+            "A": "*", "B": "*", "C": "*", "D": "*", "E": "*",
+            "F": "*", "G": "*", "H": "*", "I": "*", "J": "*",
+            "K": "*", "L": "*", "M": "*", "N": "M", "O": "*",
+            "P": "*", "Q": "*", "R": "I", "S": "*", "T": "*",
+            "U": "*", "V": "*", "W": "*", "X": "*", "Y": "*", "Z": "A"
+        },
+    FINISHED:
+        {
+            "A": "Z", "B": "Y", "C": "X", "D": "W", "E": "V",
+            "F": "U", "G": "T", "H": "S", "I": "R", "J": "Q",
+            "K": "P", "L": "O", "M": "N", "N": "M", "O": "L",
+            "P": "K", "Q": "J", "R": "I", "S": "H", "T": "G",
+            "U": "F", "V": "E", "W": "D", "X": "C", "Y": "B", "Z": "A"
+        }
 }
 
 
@@ -93,7 +93,7 @@ def test_make_puzzles_from_matches(puzzle_tree):
     pt_author: PuzzleTree = puzzle_tree[AUTHOR]
     first_puzzle: Puzzle = pt_author.get_next_puzzle_from_worklist()
     index: int = 2
-    matches: List[str] = [["I", "M"], ["I", "D"]]
+    matches: List[List[str]] = [["I", "M"], ["I", "D"]]
     pt_author.make_puzzles_from_matches(first_puzzle, index, matches)
     assert len(pt_author.worklist) == 2
     first_new_puzzle: Puzzle = pt_author.worklist[0]
@@ -101,6 +101,25 @@ def test_make_puzzles_from_matches(puzzle_tree):
     assert first_new_puzzle.coding_dict["N"] == "M"
     assert first_new_puzzle.decoded_quote_words == \
         ['*****', ',', "I'M", '*', '***I**', '!']
+
+def test_make_new_decoded_words(puzzle_tree):
+    pt_author: PuzzleTree = puzzle_tree[AUTHOR]
+    decoded_quote_progress: List[str] = pt_author.make_new_decoded_words(
+        coding_dict[IN_PROGRESS], test_coded_quote_words
+    )
+    decoded_author_progress: List(str) = pt_author.make_new_decoded_words(
+        coding_dict[IN_PROGRESS], test_coded_author_words
+    )
+    decoded_quote_finished: List[str] = pt_author.make_new_decoded_words(
+        coding_dict[FINISHED], test_coded_quote_words
+    )
+    decoded_author_finished: List(str) = pt_author.make_new_decoded_words(
+        coding_dict[FINISHED], test_coded_author_words
+    )
+    assert decoded_quote_progress == decoded_quote[IN_PROGRESS]
+    assert decoded_author_progress == decoded_author[IN_PROGRESS]
+    assert decoded_quote_finished == decoded_quote[FINISHED]
+    assert decoded_author_finished == decoded_author[FINISHED]
 
 
 #

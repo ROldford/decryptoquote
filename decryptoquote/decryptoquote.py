@@ -349,7 +349,63 @@ class PuzzleTree:
         :param index: index of newly decoded word
         :param matches: possible matches for decoded word
         """
-        pass
+        new_puzzle_list: List[Puzzle] = []
+        for match in matches:
+            # scan through undecoded word and find indices of UNKNOWNs
+            # find chars at those indices in coded word
+            # update coding dict with new letters
+            #   if conflict, match doesn't work, so skip it
+            # update decoded words with new coding
+
+            # copies are needed here to avoid mutating the parent,
+            # so all child puzzles start from the same parent puzzle
+            coding_dict: Dict[str, str] = puzzle.coding_dict.copy()
+            coded_quote_words: List[str] = \
+                puzzle.coded_quote_words.copy()
+            decoded_quote_words: List[str] = \
+                puzzle.decoded_quote_words.copy()
+            # coded_author_words: Union[List[str], None] = None
+            # decoded_author_words: Union[List[str], None] = None
+            # if puzzle.coded_author_words is not None:
+            #     coded_author_words = puzzle.coded_author_words.copy()
+            #     decoded_author_words = puzzle.decoded_author_words.copy()
+            decoded_word: str = decoded_quote_words[index]
+            coded_word: str = coded_quote_words[index]
+            i_of_unknowns: List[int] = self.find_indices_of_unknown(
+                decoded_word
+            )
+            conflict_flag: bool = False
+            for i in range(len(i_of_unknowns)):
+                coded_char: str = coded_word[i_of_unknowns[i]]
+                decoded_char: str = match[i]
+                if coding_dict[coded_char] == UNKNOWN:
+                    coding_dict[coded_char] = decoded_char
+                else:
+                    conflict_flag = True
+                    break
+            # skip to next match if there's a conflict
+            if not conflict_flag:
+                decoded_quote_words = self.make_new_decoded_words(
+                    coding_dict, coded_quote_words
+                )
+                if puzzle.coded_author_words is None:
+                    new_puzzle: Puzzle = Puzzle(coding_dict,
+                                                coded_quote_words,
+                                                decoded_quote_words)
+                    # self.update_worklist(new_puzzle)
+                    new_puzzle_list = new_puzzle_list + [new_puzzle]
+                else:
+                    coded_author_words = puzzle.coded_author_words.copy()
+                    decoded_author_words = self.make_new_decoded_words(
+                        coding_dict, coded_author_words)
+                    new_puzzle: Puzzle = Puzzle(coding_dict,
+                                                coded_quote_words,
+                                                decoded_quote_words,
+                                                coded_author_words,
+                                                decoded_author_words)
+                    # self.update_worklist(new_puzzle)
+                    new_puzzle_list = new_puzzle_list + [new_puzzle]
+        self.worklist = new_puzzle_list + self.worklist
 
     @staticmethod
     def string_to_caps_words(in_string: str) -> List[str]:
@@ -411,6 +467,42 @@ class PuzzleTree:
         :return: next puzzle in worklist
         """
         return self.worklist.pop(0)
+
+    @staticmethod
+    def find_indices_of_unknown(decoded_word: str) -> List[int]:
+        """
+        Finds indices of UNKNOWN chars in word
+        :param decoded_word: word with UNKNOWN chars
+
+        >>> PuzzleTree.find_indices_of_unknown("*HI*")
+        [0, 3]
+        >>> PuzzleTree.find_indices_of_unknown("****")
+        [0, 1, 2, 3]
+        >>> PuzzleTree.find_indices_of_unknown("THIS")
+        []
+        """
+        return [m.start() for m in re.finditer(re.escape(UNKNOWN),
+                                               decoded_word)]
+
+    @staticmethod
+    def make_new_decoded_words(coding_dict: Dict[str, str],
+                               coded_words: List[str]) -> List[str]:
+        """
+        Produces word list with known letters decoded
+        :param coding_dict: dict of code, and matching decoded, letters
+        :param coded_words: cryptoquote converted to list form
+        :return decoded word list
+        """
+        decoded_words: List[str] = []
+        for word in coded_words:
+            decoded_word: str = ""
+            for char in word:
+                if char.isalpha():
+                    decoded_word = decoded_word + coding_dict[char]
+                else:
+                    decoded_word = decoded_word + char
+            decoded_words.append(decoded_word)
+        return decoded_words
 
 
 def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
