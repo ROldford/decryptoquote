@@ -3,6 +3,7 @@
 """Main module."""
 
 import re
+import os
 import string
 from collections import Counter
 from typing import Dict, List, Tuple, Optional, Union
@@ -21,6 +22,7 @@ class LanguageModel:
         # TODO: enforce Singleton?
         # TODO: save result as JSON for reuse if no change in corpus file
         #       check corpus file hash on future runs
+        file_path = os.path.join(os.path.dirname(__file__), file_path)
         try:
             with open(file_path) as file:
                 corpus_text: str = file.read()
@@ -246,8 +248,10 @@ class PuzzleTree:
     """
 
     def __init__(self,
+                 corpus_file_path: str,
                  coded_quote: str,
                  coded_author: str = None) -> None:
+        self.lang_model: LanguageModel = LanguageModel(corpus_file_path)
         self.worklist: List[Puzzle] = []
         self.worklist.append(
             self.make_inital_puzzle(coded_quote, coded_author)
@@ -271,10 +275,10 @@ class PuzzleTree:
             puzzle = Puzzle(coding_dict, coded_quote_words, decoded_quote_words)
             return puzzle
 
-    def make_puzzles_from_matches(self,
-                                  puzzle: Puzzle,
-                                  index: int,
-                                  matches: List[List[str]]) -> None:
+    def make_child_puzzles(self,
+                           puzzle: Puzzle,
+                           index: int,
+                           matches: List[List[str]]) -> None:
         """
         Given possible matches for undecoded word,
             generates new Puzzles from matches
@@ -284,6 +288,11 @@ class PuzzleTree:
         :param matches: possible matches for decoded word
         """
         new_puzzle_list: List[Puzzle] = []
+        next_word: List[Union[int, str]] = \
+            puzzle.get_next_word_to_decode()
+        matches: List[List[str]] = lang_model.get_possible_word_matches(
+            next_word[1]
+        )
         for match in matches:
             # copies are needed here to avoid mutating the parent,
             # so all child puzzles start from the same parent puzzle
@@ -311,6 +320,12 @@ class PuzzleTree:
                 decoded_quote_words = self.make_new_decoded_words(
                     coding_dict, coded_quote_words
                 )
+                # TODO: Need to check that all fully decoded words are valid
+                #       Skip if not
+                for word in decoded_quote_words:
+                    # check if valid
+                    # if not valid, conflict flag to True and break
+
                 if puzzle.coded_author_words is None:
                     new_puzzle: Puzzle = Puzzle(coding_dict,
                                                 coded_quote_words,
@@ -425,33 +440,31 @@ class PuzzleTree:
         return decoded_words
 
 
-def decryptQuote(coded_quote: str, coded_author: str = None) -> str:
-    lang_model = LanguageModel("bigtext.txt")
-    puzzle_tree = PuzzleTree(coded_quote, coded_author)
+def decrypt_quote(coded_quote: str, coded_author: str = None) -> str:
+    puzzle_tree = PuzzleTree("bigtext.txt", coded_quote, coded_author)
     # genrec search tree loop with worklist (?)
-    while true:
-        current_puzzle: Puzzle = puzzle_tree.get_next_puzzle_from_worklist()
+    while True:
+        try:
+            current_puzzle: Puzzle = puzzle_tree.get_next_puzzle_from_worklist()
+        except IndexError:
+            return "Puzzle could not be solved"
+        print(current_puzzle.get_solution_string())
         if current_puzzle.is_solved():
             return current_puzzle.get_solution_string()
         else:
             #   If not, make any possible children
             #   and append to front of worklist
-            # TODO: Destructure this into index and word
-            next_word: List[Union[int, str]] = \
-                current_puzzle.get_next_word_to_decode()
-            matches: List[List[str]] = lang_model.get_possible_word_matches(
-                next_word[1]
-            )
-            puzzle_tree.make_puzzles_from_matches(
+            puzzle_tree.make_child_puzzles(
                 current_puzzle,
                 next_word[0],
                 matches
             )
-    #   Try next node in worklist
-    #   If no next node, puzzle could not be solved
-    return coded_quote
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    # import doctest
+    # doctest.testmod()
+    coded_quote: str = "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh " \
+                       "nbaae, byh tyqrvzqblyrh ge abqryzzbo zeqbyye. Osjr " \
+                       "lv znr inbly cnrqrge zs glyh b inloh zs lzv abqryzv."
+    print(decrypt_quote(coded_quote))

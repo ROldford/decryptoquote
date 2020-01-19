@@ -1,13 +1,11 @@
 from .decryptoquote import (
-    getCrypto,
-    displayPlaintext
-    )
+    decrypt_quote)
 # Replace project_name and needed_imports as appropriate
 
 
 def main():
     crypto = input("Enter cryptoquote: ")
-    plaintext = decryptQuote(crypto)
+    plaintext = decrypt_quote(crypto)
     print(plaintext)
 
 
