@@ -5,14 +5,16 @@
 import re
 import os
 import string
+import json
 from collections import Counter
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Iterable
 
 UNKNOWN: str = "*"
+WORDS_JSON: str = "../english-words/words_dictionary.json"
 
 
 class LanguageModel:
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: str = WORDS_JSON) -> None:
         """
         Create LanguageModel instance from given corpus file
             corpus file is large file of English text, .txt format
@@ -24,13 +26,12 @@ class LanguageModel:
         #       check corpus file hash on future runs
         file_path = os.path.join(os.path.dirname(__file__), file_path)
         try:
-            with open(file_path) as file:
-                corpus_text: str = file.read()
-        except IOError as ioerr:
-            raise IOError("Language model file is not valid") from ioerr
-        word_list = self.word_lister(corpus_text)
-        self.WORD_COUNTER = Counter(word_list)
-        self.TOTAL_WORDS = sum(self.WORD_COUNTER.values())
+            with open(file_path, 'r') as file:
+                json_dict: Dict[str, int] = json.load(file)
+        except Exception as err:
+            raise IOError("Language model file is not valid") from err
+        # TODO: store as tree
+        self.CORPUS: Iterable[str] = json_dict.keys()
 
     @staticmethod
     def word_lister(corpus: str) -> List[str]:
@@ -86,7 +87,7 @@ class LanguageModel:
         :param word: word to check
         :return: whether word is valid (in language model)
         """
-        return word.upper() in self.WORD_COUNTER
+        return word.lower() in self.CORPUS
 
     def get_possible_word_matches(self, pattern: str) -> List[List[str]]:
         """
@@ -116,18 +117,13 @@ class LanguageModel:
 
     def get_matching_words(self, pattern: str) -> List[str]:
         """
-        Produce list of matching words, ordered by frequency, then alpha
+        Produce list of matching words
         :param pattern: word pattern (* = unknown)
         :return: matching word list
         """
-        word_counter = sorted(list(self.WORD_COUNTER.items()))
-        word_counter = sorted(
-            word_counter,
-            key=lambda element: element[1],
-            reverse=True)
-        words = [x[0] for x in word_counter]
         return [
-            x for x in words if self.word_match(pattern.upper(), x)
+            x.upper() for x in self.CORPUS if self.word_match(pattern.lower(),
+                                                              x)
         ]
 
 
@@ -246,12 +242,18 @@ class PuzzleTree:
     :param coded_quote: quote portion of cryptoquote
     :param coded_author: optional author portion of cryptoquote
     """
-
     def __init__(self,
-                 corpus_file_path: str,
                  coded_quote: str,
-                 coded_author: str = None) -> None:
-        self.lang_model: LanguageModel = LanguageModel(corpus_file_path)
+                 coded_author: str = None,
+                 corpus_file_path: str = None) -> None:
+        if corpus_file_path is not None:
+            self.lang_model: LanguageModel = LanguageModel(corpus_file_path)
+        else:
+            self.lang_model: LanguageModel = LanguageModel()
+        # TODO: Worklist should be list of dictionaries!
+        #       All puzzles have same starting coded words
+        #       Decoded words can be generated from coded words and coding dict
+        #       Might be easier to update worklist with dicts than new puzzles?
         self.worklist: List[Puzzle] = []
         self.worklist.append(
             self.make_inital_puzzle(coded_quote, coded_author)
@@ -277,8 +279,7 @@ class PuzzleTree:
 
     def make_child_puzzles(self,
                            puzzle: Puzzle,
-                           index: int,
-                           matches: List[List[str]]) -> None:
+                           index: int) -> None:
         """
         Given possible matches for undecoded word,
             generates new Puzzles from matches
@@ -290,7 +291,7 @@ class PuzzleTree:
         new_puzzle_list: List[Puzzle] = []
         next_word: List[Union[int, str]] = \
             puzzle.get_next_word_to_decode()
-        matches: List[List[str]] = lang_model.get_possible_word_matches(
+        matches: List[List[str]] = self.lang_model.get_possible_word_matches(
             next_word[1]
         )
         for match in matches:
@@ -316,31 +317,37 @@ class PuzzleTree:
                     conflict_flag = True
                     break
             # skip to next match if there's a conflict
-            if not conflict_flag:
-                decoded_quote_words = self.make_new_decoded_words(
-                    coding_dict, coded_quote_words
-                )
-                # TODO: Need to check that all fully decoded words are valid
-                #       Skip if not
-                for word in decoded_quote_words:
-                    # check if valid
-                    # if not valid, conflict flag to True and break
-
-                if puzzle.coded_author_words is None:
-                    new_puzzle: Puzzle = Puzzle(coding_dict,
-                                                coded_quote_words,
-                                                decoded_quote_words)
-                    new_puzzle_list = new_puzzle_list + [new_puzzle]
-                else:
-                    coded_author_words = puzzle.coded_author_words.copy()
-                    decoded_author_words = self.make_new_decoded_words(
-                        coding_dict, coded_author_words)
-                    new_puzzle: Puzzle = Puzzle(coding_dict,
-                                                coded_quote_words,
-                                                decoded_quote_words,
-                                                coded_author_words,
-                                                decoded_author_words)
-                    new_puzzle_list = new_puzzle_list + [new_puzzle]
+            if conflict_flag:
+                break
+            decoded_quote_words = self.make_new_decoded_words(
+                coding_dict, coded_quote_words
+            )
+            # TODO: Need to check that all fully decoded words are valid
+            #       Skip if not
+            for word in decoded_quote_words:
+                # check if valid
+                # if not valid, conflict flag to True and break
+                if not self.lang_model.is_valid_word(word):
+                    conflict_flag = True
+                if conflict_flag:
+                    break
+            if conflict_flag:
+                break
+            if puzzle.coded_author_words is None:
+                new_puzzle: Puzzle = Puzzle(coding_dict,
+                                            coded_quote_words,
+                                            decoded_quote_words)
+                new_puzzle_list = new_puzzle_list + [new_puzzle]
+            else:
+                coded_author_words = puzzle.coded_author_words.copy()
+                decoded_author_words = self.make_new_decoded_words(
+                    coding_dict, coded_author_words)
+                new_puzzle: Puzzle = Puzzle(coding_dict,
+                                            coded_quote_words,
+                                            decoded_quote_words,
+                                            coded_author_words,
+                                            decoded_author_words)
+                new_puzzle_list = new_puzzle_list + [new_puzzle]
         self.worklist = new_puzzle_list + self.worklist
 
     @staticmethod

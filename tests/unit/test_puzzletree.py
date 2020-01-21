@@ -91,8 +91,7 @@ def test_make_puzzles_from_matches(puzzle_tree):
     pt_author: PuzzleTree = puzzle_tree[AUTHOR]
     first_puzzle: Puzzle = pt_author.get_next_puzzle_from_worklist()
     index: int = 2
-    matches: List[List[str]] = [["I", "M"], ["I", "D"]]
-    pt_author.make_child_puzzles(first_puzzle, index, matches)
+    pt_author.make_child_puzzles(first_puzzle, index)
     assert len(pt_author.worklist) == 2
     first_new_puzzle: Puzzle = pt_author.worklist[0]
     assert first_new_puzzle.coding_dict["R"] == "I"
