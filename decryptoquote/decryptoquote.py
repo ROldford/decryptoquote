@@ -2,129 +2,77 @@
 
 """Main module."""
 
-import re
 import os
+import re
 import string
-import json
-from collections import Counter
-from typing import Dict, List, Tuple, Optional, Union, Iterable
+from typing import Dict, List, Optional, Union
 
 UNKNOWN: str = "*"
-WORDS_JSON: str = "../english-words/words_dictionary.json"
+CORPUS_FILE: str = "words_alpha_apos.txt"
+SHORT_WORDS_CORPUS_FILE: str = "words_small.txt"
+
+
+# TODO: Use word pattern concept in
+#      https://inventwithpython.com/hacking/chapter18.html
 
 
 class LanguageModel:
-    def __init__(self, file_path: str = WORDS_JSON) -> None:
+    def __init__(self,
+                 main_file_path: str = CORPUS_FILE) -> None:
         """
         Create LanguageModel instance from given corpus file
             corpus file is large file of English text, .txt format
-        :param file_path: path to language corpus file
+        :param main_file_path: path to language corpus file
         :exception IOError if corpus file is invalid
         """
         # TODO: enforce Singleton?
-        # TODO: save result as JSON for reuse if no change in corpus file
-        #       check corpus file hash on future runs
-        file_path = os.path.join(os.path.dirname(__file__), file_path)
+        main_file_path = os.path.join(
+            os.path.dirname(__file__), main_file_path)
+        self._patterns: Dict[str, List[str]] = {}
         try:
-            with open(file_path, 'r') as file:
-                json_dict: Dict[str, int] = json.load(file)
+            with open(main_file_path, 'r') as file:
+                # TODO: store as tree
+                word_list: List[str] = [
+                    s.upper() for s in file.read().splitlines()
+                ]
+                for word in word_list:
+                    pattern: str = self.word_to_pattern(word)
+                    if pattern not in self._patterns:
+                        self._patterns[pattern] = [word]
+                    else:
+                        self._patterns[pattern].append(word)
         except Exception as err:
-            raise IOError("Language model file is not valid") from err
-        # TODO: store as tree
-        self.CORPUS: Iterable[str] = json_dict.keys()
+            raise IOError(
+                f"Language model file not valid: {main_file_path}"
+            ) from err
 
     @staticmethod
-    def word_lister(corpus: str) -> List[str]:
+    def word_to_pattern(word: str) -> str:
         """
-        Converts corpus into list of words (no punct. except apostrophe)
-        :param corpus: large sample of English language
-        :return: list of words in corpus
 
-        >>> LanguageModel.word_lister("This is also some text. This isn't.")
-        ['THIS', 'IS', 'ALSO', 'SOME', 'TEXT', 'THIS', "ISN'T"]
-        >>> LanguageModel.word_lister("")
-        []
-        >>> LanguageModel.word_lister(".,:;")
-        []
+        :param word:
+        :return:
         """
-        return re.findall("[A-Z']+", corpus.upper())
+        word = word.upper()
+        pattern_num = 0
+        letter_nums: Dict[str, str] = {}
+        word_pattern = []
+        for letter in word:
+            if letter not in "'-":
+                if letter not in letter_nums:
+                    letter_nums[letter] = str(pattern_num)
+                    pattern_num += 1
+                word_pattern.append(letter_nums[letter])
+            else:
+                word_pattern.append(letter)
+        return ".".join(word_pattern)
 
-    @staticmethod
-    def word_match(word: str, elem: str) -> bool:
-        """
-        Check if word pattern from puzzle matches word from corpus
-        :param word: word pattern from puzzle (* = unknown letter)
-        :param elem: word from corpus
-        :return: match status
+    def pattern_to_match_words(self, pattern: str) -> List[str]:
+        return self._patterns[pattern]
 
-        >>> LanguageModel.word_match("", "")
-        True
-        >>> LanguageModel.word_match("***", "this")
-        False
-        >>> LanguageModel.word_match("****", "this")
-        True
-        >>> LanguageModel.word_match("****", "word")
-        True
-        >>> LanguageModel.word_match("th**", "this")
-        True
-        >>> LanguageModel.word_match("th**", "that")
-        True
-        >>> LanguageModel.word_match("th**", "word")
-        False
-        """
-        word_length = len(word)
-        elem_length = len(elem)
-        if word_length != elem_length:
-            return False
-        for i in range(word_length):
-            if word[i] != UNKNOWN and word[i] != elem[i]:
-                return False
-        return True
-
-    def is_valid_word(self, word: str) -> bool:
-        """
-        Check if given word exists in the language model
-        :param word: word to check
-        :return: whether word is valid (in language model)
-        """
-        return word.lower() in self.CORPUS
-
-    def get_possible_word_matches(self, pattern: str) -> List[List[str]]:
-        """
-        Given coded word pattern, produce possible char matches
-        :param pattern: coded word pattern (with UNKNOWN placeholder)
-        :return: list of possible char matches (as lists)
-                    Only includes matches for UNKNOWN
-
-        Example:
-            given "***'*",
-                produces [['I', 'S', 'N', 'T'], ['D', 'O', 'N', 'T'], ...]
-            given "HO*S*",
-                produces [['U', 'E'], ...]
-        """
-        wildcard_pos = []
-        for i in range(len(pattern)):
-            if pattern[i] is UNKNOWN:
-                wildcard_pos.append(i)
-        matching_words = self.get_matching_words(pattern)
-        match_list = []
-        for word in matching_words:
-            l = []
-            for i in wildcard_pos:
-                l.append(word[i].upper())
-            match_list.append(l)
-        return match_list
-
-    def get_matching_words(self, pattern: str) -> List[str]:
-        """
-        Produce list of matching words
-        :param pattern: word pattern (* = unknown)
-        :return: matching word list
-        """
-        return [
-            x.upper() for x in self.CORPUS if self.word_match(pattern.lower(),
-                                                              x)
-        ]
+    def code_word_to_match_words(self, code_word: str) -> List[str]:
+        pattern: str = self.word_to_pattern(code_word)
+        return self.pattern_to_match_words(pattern)
 
 
 class Puzzle:
@@ -136,6 +84,7 @@ class Puzzle:
     :param coded_author_words: list of words in author part of cryptoquote
     :param decoded_author_words: list of author part words being decoded
     """
+
     def __init__(self,
                  coding_dict: Dict[str, str],
                  coded_quote_words: List[str],
@@ -199,7 +148,8 @@ class Puzzle:
             Words from author part are not chosen
         :returns (word index, chosen undecoded word)
         """
-        min_unknown: int = 50
+        # TODO: take out apostrophe bonus, just go with undecoded number
+        smallest_unknown: int = 50
         chosen_word: str = ""
         chosen_index: int = 0
         for i in range(len(self.decoded_quote_words)):
@@ -207,10 +157,10 @@ class Puzzle:
             curr_unknown: int = self.count_unknown_letters(
                 curr_word
             )
-            if curr_unknown > 0 and curr_unknown < min_unknown:
+            if curr_unknown > 0 and curr_unknown < smallest_unknown:
                 chosen_index = i
                 chosen_word = curr_word
-                min_unknown = curr_unknown
+                smallest_unknown = curr_unknown
         return [chosen_index, chosen_word]
 
     @staticmethod
@@ -242,6 +192,7 @@ class PuzzleTree:
     :param coded_quote: quote portion of cryptoquote
     :param coded_author: optional author portion of cryptoquote
     """
+
     def __init__(self,
                  coded_quote: str,
                  coded_author: str = None,
@@ -250,7 +201,7 @@ class PuzzleTree:
             self.lang_model: LanguageModel = LanguageModel(corpus_file_path)
         else:
             self.lang_model: LanguageModel = LanguageModel()
-        # TODO: Worklist should be list of dictionaries!
+        # TODO: Worklist should be list of coding dictionaries!
         #       All puzzles have same starting coded words
         #       Decoded words can be generated from coded words and coding dict
         #       Might be easier to update worklist with dicts than new puzzles?
@@ -278,19 +229,18 @@ class PuzzleTree:
             return puzzle
 
     def make_child_puzzles(self,
-                           puzzle: Puzzle,
-                           index: int) -> None:
+                           puzzle: Puzzle) -> None:
         """
-        Given possible matches for undecoded word,
-            generates new Puzzles from matches
+        Generates new Puzzles with new matched word
             and adds to start of worklist
         :param puzzle: starting puzzle
-        :param index: index of newly decoded word
-        :param matches: possible matches for decoded word
         """
+        # TODO: I changed this method at some point, but docs are the same
+        #       How does it actually work now?
         new_puzzle_list: List[Puzzle] = []
         next_word: List[Union[int, str]] = \
             puzzle.get_next_word_to_decode()
+        next_word_index: int = next_word[0]
         matches: List[List[str]] = self.lang_model.get_possible_word_matches(
             next_word[1]
         )
@@ -302,8 +252,8 @@ class PuzzleTree:
                 puzzle.coded_quote_words.copy()
             decoded_quote_words: List[str] = \
                 puzzle.decoded_quote_words.copy()
-            decoded_word: str = decoded_quote_words[index]
-            coded_word: str = coded_quote_words[index]
+            decoded_word: str = decoded_quote_words[next_word_index]
+            coded_word: str = coded_quote_words[next_word_index]
             i_of_unknowns: List[int] = self.find_indices_of_unknown(
                 decoded_word
             )
@@ -317,37 +267,35 @@ class PuzzleTree:
                     conflict_flag = True
                     break
             # skip to next match if there's a conflict
-            if conflict_flag:
-                break
-            decoded_quote_words = self.make_new_decoded_words(
-                coding_dict, coded_quote_words
-            )
-            # TODO: Need to check that all fully decoded words are valid
-            #       Skip if not
-            for word in decoded_quote_words:
-                # check if valid
-                # if not valid, conflict flag to True and break
-                if not self.lang_model.is_valid_word(word):
-                    conflict_flag = True
-                if conflict_flag:
-                    break
-            if conflict_flag:
-                break
-            if puzzle.coded_author_words is None:
-                new_puzzle: Puzzle = Puzzle(coding_dict,
-                                            coded_quote_words,
-                                            decoded_quote_words)
-                new_puzzle_list = new_puzzle_list + [new_puzzle]
-            else:
-                coded_author_words = puzzle.coded_author_words.copy()
-                decoded_author_words = self.make_new_decoded_words(
-                    coding_dict, coded_author_words)
-                new_puzzle: Puzzle = Puzzle(coding_dict,
-                                            coded_quote_words,
-                                            decoded_quote_words,
-                                            coded_author_words,
-                                            decoded_author_words)
-                new_puzzle_list = new_puzzle_list + [new_puzzle]
+            if not conflict_flag:
+                decoded_quote_words = self.make_new_decoded_words(
+                    coding_dict, coded_quote_words
+                )
+                # TODO: Need to check that all fully decoded words are valid
+                #       Skip if not
+                for word in decoded_quote_words:
+                    # check if valid
+                    # if not valid, conflict flag to True and break
+                    if not self.lang_model.is_valid_word(word):
+                        conflict_flag = True
+                    if conflict_flag:
+                        break
+                if not conflict_flag:
+                    if puzzle.coded_author_words is None:
+                        new_puzzle: Puzzle = Puzzle(coding_dict,
+                                                    coded_quote_words,
+                                                    decoded_quote_words)
+                        new_puzzle_list = new_puzzle_list + [new_puzzle]
+                    else:
+                        coded_author_words = puzzle.coded_author_words.copy()
+                        decoded_author_words = self.make_new_decoded_words(
+                            coding_dict, coded_author_words)
+                        new_puzzle: Puzzle = Puzzle(coding_dict,
+                                                    coded_quote_words,
+                                                    decoded_quote_words,
+                                                    coded_author_words,
+                                                    decoded_author_words)
+                        new_puzzle_list = new_puzzle_list + [new_puzzle]
         self.worklist = new_puzzle_list + self.worklist
 
     @staticmethod
@@ -448,13 +396,14 @@ class PuzzleTree:
 
 
 def decrypt_quote(coded_quote: str, coded_author: str = None) -> str:
-    puzzle_tree = PuzzleTree("bigtext.txt", coded_quote, coded_author)
+    puzzle_tree = PuzzleTree(coded_quote, coded_author, "words_alpha_apos.txt")
     # genrec search tree loop with worklist (?)
     while True:
         try:
             current_puzzle: Puzzle = puzzle_tree.get_next_puzzle_from_worklist()
         except IndexError:
             return "Puzzle could not be solved"
+        # TODO: remove this when app works
         print(current_puzzle.get_solution_string())
         if current_puzzle.is_solved():
             return current_puzzle.get_solution_string()
@@ -462,9 +411,7 @@ def decrypt_quote(coded_quote: str, coded_author: str = None) -> str:
             #   If not, make any possible children
             #   and append to front of worklist
             puzzle_tree.make_child_puzzles(
-                current_puzzle,
-                next_word[0],
-                matches
+                current_puzzle
             )
 
 
