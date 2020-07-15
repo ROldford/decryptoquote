@@ -14,8 +14,8 @@ from decryptoquote import decryptoquote
 # def ?():
 
 def test_string_to_caps_words():
-    assert decryptoquote.string_to_caps_words("Svool, R'n z hgirmt!") \
-           == ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
+    assert decryptoquote.string_to_caps_words("Svool, R'n z hgi-rmt!") \
+           == ['SVOOL', ',', "R'N", 'Z', 'HGI-RMT', '!']
 
 
 def test_get_blank_cypherletter_map():
@@ -60,6 +60,14 @@ def test_add_letters_to_mapping():
         'P': [], 'Q': [], 'R': [], 'S': [], 'T': [],
         'U': [], 'V': [], 'W': [], 'X': [], 'Y': [], 'Z': [],
     }
+
+def test_add_letters_to_map_punctuation():
+    blank_map: Dict[str, List[str]] = decryptoquote.get_blank_cypherletter_map()
+    test_map: Dict[str, List[str]] = blank_map
+    word: str = "!"
+    match: str = "!"
+    test_map = decryptoquote.add_letters_to_mapping(test_map, word, match)
+    assert test_map == blank_map
 
 
 def test_intersect_mappings():

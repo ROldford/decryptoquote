@@ -2,15 +2,20 @@
 
 """Main module."""
 import copy
+import json
 import os
+import pprint
 import re
 import string
 from typing import Dict, List, Optional, Union
 
 UNKNOWN: str = "*"
+PATTERNS_JSON: str = "word_patterns.json"
 CORPUS_FILE: str = "words_alpha_apos.txt"
 # SHORT_WORDS_CORPUS_FILE: str = "words_small.txt"
-ALLOWED_PUNCT: str = "'-"
+IN_WORD_PUNCT: str = "'-"
+NON_WORD_PUNCT: str = ".,!?;"
+PUNCTUATION: str = "{0}{1}".format(IN_WORD_PUNCT, NON_WORD_PUNCT)
 LETTERS: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
@@ -20,33 +25,47 @@ LETTERS: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 class LanguageModel:
     def __init__(self,
-                 main_file_path: str = CORPUS_FILE) -> None:
+                 pattern_dict_file_path: str,
+                 overwrite_json: bool = False,
+                 corpus_file_path: str = None) -> None:
         """
         Create LanguageModel instance from given corpus file
             corpus file is large file of English text, .txt format
-        :param main_file_path: path to language corpus file
+        :param corpus_file_path: path to language corpus file
         :exception IOError if corpus file is invalid
         """
         # TODO: enforce Singleton?
-        main_file_path = os.path.join(
-            os.path.dirname(__file__), main_file_path)
-        self._patterns: Dict[str, List[str]] = {}
-        try:
-            with open(main_file_path, 'r') as file:
-                # TODO: store as tree
-                word_list: List[str] = [
-                    s.upper() for s in file.read().splitlines()
-                ]
-                for word in word_list:
-                    pattern: str = self.word_to_pattern(word)
-                    if pattern not in self._patterns:
-                        self._patterns[pattern] = [word]
-                    else:
-                        self._patterns[pattern].append(word)
-        except Exception as err:
-            raise IOError(
-                f"Language model file not valid: {main_file_path}"
-            ) from err
+        if overwrite_json or not os.path.exists(pattern_dict_file_path):
+            # we need a new patterns JSON, so get words from corpus text file
+            self._patterns: Dict[str, List[str]] = {}
+            try:
+                with open(corpus_file_path, 'r') as file:
+                    # TODO: store as tree
+                    word_list: List[str] = [
+                        s.upper() for s in file.read().splitlines()
+                    ]
+                    for word in word_list:
+                        pattern: str = self.word_to_pattern(word)
+                        if pattern not in self._patterns:
+                            self._patterns[pattern] = [word]
+                        else:
+                            self._patterns[pattern].append(word)
+            except Exception as err:
+                raise IOError(
+                    f"Language model file not valid: {corpus_file_path}"
+                ) from err
+            try:
+                with open(pattern_dict_file_path, "w") as file:
+                    json.dump(self._patterns, file)
+            except Exception as err:
+                raise IOError(
+                    f"Patterns file not created correctly: {pattern_dict_file_path}"
+                ) from err
+        else:
+            # just load patterns JSON
+            with open(pattern_dict_file_path, "r") as file:
+                self._patterns = json.load(file)
+
 
     @staticmethod
     def word_to_pattern(word: str) -> str:
@@ -60,7 +79,7 @@ class LanguageModel:
         letter_nums: Dict[str, str] = {}
         word_pattern = []
         for letter in word:
-            if letter not in ALLOWED_PUNCT:
+            if letter not in PUNCTUATION:
                 if letter not in letter_nums:
                     letter_nums[letter] = str(pattern_num)
                     pattern_num += 1
@@ -70,11 +89,20 @@ class LanguageModel:
         return ".".join(word_pattern)
 
     def pattern_to_match_words(self, pattern: str) -> List[str]:
-        return self._patterns[pattern]
+        if pattern not in self._patterns:
+            return [pattern]
+        else:
+            return self._patterns[pattern]
 
     def code_word_to_match_words(self, code_word: str) -> List[str]:
         pattern: str = self.word_to_pattern(code_word)
         return self.pattern_to_match_words(pattern)
+
+    def add_words_to_saved_patterns(self, words: List[str]):
+        pass # TODO: stub
+
+    def make_corpus_from_patterns(self, corpus_file_path: str) -> None:
+        pass # TODO: stub
 
 
 # class Puzzle:
@@ -406,7 +434,12 @@ def string_to_caps_words(in_string: str) -> List[str]:
     >>> string_to_caps_words("Svool, R'n z hgirmt!")
     ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
     """
-    return re.findall(r"[\w']+|[.,!?;]", in_string.upper())
+    return re.findall(r"[\w'-]+|[.,!?;]", in_string.upper())
+    # regex explanation:
+    # first [] matches words, including "in-word punctuation" ie. ' and -
+    # second bracket matches exactly 1 "non-word punctuation"
+    # | == OR
+    # so regex splits into words (via findall)
 
 
 def get_blank_cypherletter_map() -> Dict[str, List[str]]:
@@ -423,7 +456,7 @@ def add_letters_to_mapping(cypherletter_map: Dict[str, List[str]],
                            match: str) -> Dict[str, List[str]]:
     cypherletter_map = copy.deepcopy(cypherletter_map)
     for i in range(len(word)):
-        if match[i] not in ALLOWED_PUNCT:
+        if match[i] not in PUNCTUATION:
             if match[i] not in cypherletter_map[word[i]]:
                 cypherletter_map[word[i]].append(match[i])
     return cypherletter_map
@@ -466,6 +499,7 @@ def remove_solved_letters_from_map(cypherletter_map: Dict[str, List[str]]) \
                     if len(cypherletter_map[letter]) == 1:
                         # new letter is now solved, so we're not done yet!
                         done = False
+    print(cypherletter_map)
     return cypherletter_map
 
 
@@ -495,8 +529,16 @@ def get_cypherletter_map_as_string(cypherletter_map: Dict[str, List[str]]) \
     return "Decoder:\n{0}\n{1}".format(LETTERS, "".join(key))
 
 
-def decrypt_quote(coded_quote: str, coded_author: str = None) -> str:
-    language_model = LanguageModel("words_alpha_apos.txt")
+def decrypt_quote(coded_quote: str,
+                  coded_author: str = None,
+                  print_cypher: bool = False) -> str:
+    # TODO: may need to make path absolute
+    pattern_dict_file_path = os.path.join(
+        os.path.dirname(__file__), PATTERNS_JSON)
+    corpus_file_path = os.path.join(
+        os.path.dirname(__file__), CORPUS_FILE)
+    language_model = LanguageModel(pattern_dict_file_path,
+                                   corpus_file_path=corpus_file_path)
     final_map: Dict[str, List[str]] = get_blank_cypherletter_map()
     quote_words: List[str] = string_to_caps_words(coded_quote)
     for word in quote_words:
@@ -510,15 +552,19 @@ def decrypt_quote(coded_quote: str, coded_author: str = None) -> str:
         final_map = intersect_mappings(final_map, new_map)
     final_map = remove_solved_letters_from_map(final_map)
     decoded_quote: str = decrypt_with_cypherletter_map(coded_quote, final_map)
+    return_value: str = ""
     if coded_author is None:
-        return "{0}\n{1}".format(decoded_quote,
-                                 get_cypherletter_map_as_string(final_map))
+        return_value = decoded_quote
+        # return "{0}\n{1}".format(decoded_quote, get_cypherletter_map_as_string(final_map))
     else:
         decoded_author: str = decrypt_with_cypherletter_map(coded_author,
                                                             final_map)
-        return "{0} - {1}\n{2}".format(
-            decoded_quote, decoded_author,
-            get_cypherletter_map_as_string(final_map))
+        return_value = "{0} - {1}".format(decoded_quote, decoded_author)
+    if (print_cypher):
+        return "{0}\n{1}".format(
+            return_value, get_cypherletter_map_as_string(final_map))
+    else:
+        return return_value
 
     # puzzle_tree = PuzzleTree(coded_quote, coded_author, "words_alpha_apos.txt")
     # # genrec search tree loop with worklist (?)
