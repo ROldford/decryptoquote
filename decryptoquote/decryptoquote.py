@@ -23,13 +23,13 @@ LETTERS: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #      https://inventwithpython.com/hacking/chapter18.html
 
 
-class LanguageModel:
+class WordPatterns:
     def __init__(self,
                  pattern_dict_file_path: str,
                  overwrite_json: bool = False,
                  corpus_file_path: str = None) -> None:
         """
-        Create LanguageModel instance from given corpus file
+        Create WordPatterns instance from given corpus file
             corpus file is large file of English text, .txt format
         :param corpus_file_path: path to language corpus file
         :exception IOError if corpus file is invalid
@@ -103,6 +103,84 @@ class LanguageModel:
 
     def make_corpus_from_patterns(self, corpus_file_path: str) -> None:
         pass # TODO: stub
+
+
+class WordTreeNode:
+    def __init__(self):
+        self._children: Dict[str, WordTreeNode] = {}
+        self._word_end: bool = False
+
+    def add_word(self, word: str) -> None:
+        if len(word) == 0:
+            self._word_end = True
+        else:
+            word_first: str = word.upper()[0]
+            word_rest: str = word.upper()[1:]
+            if word[0] in self._children:
+                child: WordTreeNode = self._children[word_first]
+                child.add_word(word_rest)
+            else:
+                child: WordTreeNode = WordTreeNode()
+                self._children[word_first] = child
+                child.add_word(word_rest)
+
+
+    def is_word(self, word: str) -> bool:
+        if len(word) == 0:
+            return self._word_end
+        else:
+            word_first: str = word.upper()[0]
+            word_rest: str = word.upper()[1:]
+            if word_first in self._children:
+                child: WordTreeNode = self._children[word_first]
+                return child.is_word(word_rest)
+            else:
+                return False
+
+    def find_words(self, word: str) -> List[str]:
+        # return []  # stub
+        return self._find_words(word, [])
+
+
+    def _find_words(self, word: str, acc: List[str]) -> List[str]:
+        if len(word) == 0:
+            if not self._word_end:  # invalid word
+                return []
+            else:
+                return acc
+        else:
+            word_first: str = word.upper()[0]
+            word_rest: str = word.upper()[1:]
+            if word_first == "_":
+                # for each child letter,
+                # append child letter to copy of acc
+                # self.find_words(word_rest, acc copy)
+                # merge resulting lists together and return
+                return_value: List[str] = []
+                for key, value in self._children.items():
+                    new_acc = []
+                    if len(acc) > 0:
+                        new_acc.append(acc[0] + key)
+                    else:
+                        new_acc.append(key)
+                    # return_value.extend(self._find_words(word_rest, new_acc))
+                    rec_result = value._find_words(word_rest, new_acc)
+                    return_value = return_value + rec_result
+                return return_value
+            elif word_first in self._children.keys():
+                # append word_first to end of acc
+                # return self.find_words(word_rest, acc
+                new_acc = []
+                if len(acc) > 0:
+                    new_acc.append(acc[0] + word_first)
+                else:
+                    new_acc.append(word_first)
+                child: WordTreeNode = self._children[word_first]
+                return child._find_words(word_rest, new_acc)
+            else:
+                return []
+
+
 
 
 # class Puzzle:
@@ -228,9 +306,9 @@ class LanguageModel:
 #                  coded_author: str = None,
 #                  corpus_file_path: str = None) -> None:
 #         if corpus_file_path is not None:
-#             self.lang_model: LanguageModel = LanguageModel(corpus_file_path)
+#             self.lang_model: WordPatterns = WordPatterns(corpus_file_path)
 #         else:
-#             self.lang_model: LanguageModel = LanguageModel()
+#             self.lang_model: WordPatterns = WordPatterns()
 #         # TODO: Worklist should be list of coding dictionaries!
 #         #       All puzzles have same starting coded words
 #         #       Decoded words can be generated from coded words and coding dict
@@ -499,7 +577,6 @@ def remove_solved_letters_from_map(cypherletter_map: Dict[str, List[str]]) \
                     if len(cypherletter_map[letter]) == 1:
                         # new letter is now solved, so we're not done yet!
                         done = False
-    print(cypherletter_map)
     return cypherletter_map
 
 
@@ -537,8 +614,12 @@ def decrypt_quote(coded_quote: str,
         os.path.dirname(__file__), PATTERNS_JSON)
     corpus_file_path = os.path.join(
         os.path.dirname(__file__), CORPUS_FILE)
-    language_model = LanguageModel(pattern_dict_file_path,
-                                   corpus_file_path=corpus_file_path)
+    # TODO: put this back once testing works
+    # language_model = WordPatterns(pattern_dict_file_path,
+    #                                corpus_file_path=corpus_file_path)
+    language_model = WordPatterns(pattern_dict_file_path,
+                                  True,
+                                  corpus_file_path)
     final_map: Dict[str, List[str]] = get_blank_cypherletter_map()
     quote_words: List[str] = string_to_caps_words(coded_quote)
     for word in quote_words:
@@ -585,6 +666,11 @@ def decrypt_quote(coded_quote: str,
     #         )
 
 
+# TODO: add command line arguments to:
+#       update patterns dict from corpus file
+#       update corpus file from patterns dict
+#       suggest words (and have them added to patterns dict if solution works)
+#       force add words to patterns dict
 if __name__ == "__main__":
     # import doctest
     # doctest.testmod()
