@@ -2,17 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """Unit tests for WordPatterns class in `decryptoquote` package."""
-# import json
-import os
-
 import pytest
-# import pyfakefs
-
 from decryptoquote import decryptoquote
+from typing import List
+
 
 @pytest.fixture()
 def word_tree():
     return decryptoquote.WordTreeNode()
+
 
 def test_add_word(word_tree):
     word_tree.add_word("a")
