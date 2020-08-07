@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Unit tests for WordPatterns class in `decryptoquote` package."""
+"""Unit tests for WordTreeNode class in `decryptoquote` package."""
 import pytest
 from decryptoquote import decryptoquote
 from typing import List
