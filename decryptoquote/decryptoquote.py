@@ -133,7 +133,6 @@ class WordTreeNode:
                 return False
 
     def find_words(self, word: str) -> List[str]:
-        # return []  # stub
         return self._find_words(word, [])
 
     def _find_words(self, word: str, acc: List[str]) -> List[str]:
@@ -198,6 +197,20 @@ class CypherLetterMap:
 
     def get_letter_for_cypher(self, cypher: str) -> Optional[List[str]]:
         return self._clmap[cypher]
+
+    def decrypt(self, code: str) -> str:
+        code = code.upper()
+        decoded: List[str] = list(copy.deepcopy(code))
+        for i in range(len(code)):
+            letter: str = code[i]
+            if letter in LETTERS:  # is it an A-Z letter?
+                match: Optional[List[str]] = \
+                    self.get_letter_for_cypher(letter)
+                if match is not None and len(match) == 1:
+                    decoded[i] = match[0]
+                else:
+                    decoded[i] = "_"
+        return "".join(decoded)
 
     def add_letters_to_mapping(self,
                                word: str,
@@ -279,13 +292,14 @@ class CypherLetterMap:
 class SolutionTreeNode:
     def __init__(self,
                  coded_quote: str,
-                 decoded_quote: str,
-                 cypherletter_map: Dict[str, List[str]],
-                 wordtree: WordTreeNode):
+                 cypherletter_map: CypherLetterMap,
+                 wordtree: WordTreeNode = None):
         self._coded_quote: str = coded_quote
-        self._decoded_quote: str = decoded_quote
-        self._cypherletter_map: Dict[str, List[str]] = cypherletter_map
+        self._cypherletter_map: CypherLetterMap = cypherletter_map
+        if wordtree is None:
+            self._wordtree = WordTreeNode
         self._wordtree: WordTreeNode = wordtree
+        self._children: List[SolutionTreeNode] = []
 
     def generate_solutions(self) -> List[Tuple[str, Dict[str, List[str]]]]:
         # choose first incomplete word from decoded quote

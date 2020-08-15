@@ -69,6 +69,51 @@ def test_add_letters_to_map_punctuation(cypherletter_map):
         assert cypherletter_map.get_letter_for_cypher(letter) == None
 
 
+def test_decrypt_with_map(cypherletter_map,
+                          cypherletter_map2,
+                          cypherletter_map3):
+    # map1: Dict[str, Optional[List[str]]] = {
+    #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
+    #     'F': ["U"], 'G': ["T"], 'H': ["S"], 'I': ["R"], 'J': ["Q"],
+    #     'K': ["P"], 'L': ["O"], 'M': ["N"], 'N': ["M"], 'O': ["L"],
+    #     'P': ["K"], 'Q': ["J"], 'R': ["I"], 'S': ["H"], 'T': ["G"],
+    #     'U': ["F"], 'V': ["E"], 'W': ["D"], 'X': ["C"], 'Y': ["B"], 'Z': ["A"],
+    # }
+    cypherletter_map.add_letters_to_mapping("ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                "ZYXWVUTSRQPONMLKJIHGFEDCBA")
+    # map2: Dict[str, Optional[List[str]]] = {
+    #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
+    #     'F': ["U"], 'G': ["T"], 'H': ["S"], 'I': ["R"], 'J': ["Q"],
+    #     'K': ["P"], 'L': ["M", "N"], 'M': ["L", "N"], 'N': ["L", "M"],
+    #     'O': ["L"],
+    #     'P': ["K"], 'Q': ["J"], 'R': ["I"], 'S': ["H"], 'T': ["G"],
+    #     'U': ["F"], 'V': ["E"], 'W': ["D"], 'X': ["C"], 'Y': ["B"], 'Z': ["A"],
+    # }
+    cypherletter_map2.add_letters_to_mapping("ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                "ZYXWVUTSRQPMLLLKJIHGFEDCBA")
+    cypherletter_map2.add_letters_to_mapping("LMN", "NNM")
+    # map3: Dict[str, Optional[List[str]]] = {
+    #     'A': ["Z"], 'B': None, 'C': None, 'D': None, 'E': None,
+    #     'F': None, 'G': None, 'H': None, 'I': None, 'J': None,
+    #     'K': None, 'L': None, 'M': None, 'N': None, 'O': None,
+    #     'P': None, 'Q': None, 'R': None, 'S': None, 'T': None,
+    #     'U': None, 'V': None, 'W': None, 'X': None, 'Y': None, 'Z': ["A"],
+    # }
+    cypherletter_map3.add_letters_to_mapping("AZ", "ZA")
+    expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
+    expected2: str = "ZYXWVUTSRQP___LKJIHGFEDCBA"
+    expected3: str = "Z________________________A"
+    assert decryptoquote.decrypt_with_cypherletter_map(
+        decryptoquote.LETTERS,
+        cypherletter_map) == expected1
+    assert decryptoquote.decrypt_with_cypherletter_map(
+        decryptoquote.LETTERS,
+        cypherletter_map2) == expected2
+    assert decryptoquote.decrypt_with_cypherletter_map(
+        decryptoquote.LETTERS,
+        cypherletter_map3) == expected3
+
+
 def test_intersect_mappings(cypherletter_map, cypherletter_map2):
     # need letters where:
     #   both maps have []
