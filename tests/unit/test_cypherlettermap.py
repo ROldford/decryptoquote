@@ -348,6 +348,20 @@ def test_repr(cypherletter_map, cypherletter_map2, cypherletter_map3):
            == "CypherLetterMap({0})".format(expected3)
 
 
+def test_eq(cypherletter_map,
+            cypherletter_map2,
+            cypherletter_map3,
+            cypherletter_map4):
+    cypherletter_map.add_letters_to_mapping("ABCD", "SELF")
+    cypherletter_map2.add_letters_to_mapping("ABCDE", "OTHER")
+    cypherletter_map3.add_letters_to_mapping("ABCD", "SELF")
+    not_a_clm: str = "not a cypherletter map"
+    assert cypherletter_map == cypherletter_map
+    assert cypherletter_map == cypherletter_map3
+    assert cypherletter_map != cypherletter_map2
+    assert cypherletter_map != not_a_clm
+
+
 def test_deepcopy(cypherletter_map):
     clm_deepcopy = copy.deepcopy(cypherletter_map)
     assert cypherletter_map.get_letter_for_cypher("A") is None

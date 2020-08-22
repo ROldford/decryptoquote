@@ -175,7 +175,6 @@ class WordTreeNode:
 
 
 class CypherLetterMap:
-    # TODO: develop this
     def __init__(self):
         self._clmap: Dict[str, Optional[List[str]]] = {}
         for letter in LETTERS:
@@ -189,11 +188,27 @@ class CypherLetterMap:
         key: List[str] = []
         for letter in LETTERS:
             if self._clmap[letter] is None \
-                    or len(self._clmap[letter]) != 1:
+                or len(self._clmap[letter]) != 1:
                 key.append("_")
             else:
                 key.append(self._clmap[letter][0])
         return "Decoder:\n{0}\n{1}".format(LETTERS, "".join(key))
+
+    def __eq__(self, other):
+        try:
+            if self is other:
+                return True
+            else:
+                for key in self._clmap.keys():
+                    if self.get_letter_for_cypher(key) \
+                        != other.get_letter_for_cypher(key):
+                        return False
+                return True
+        except AttributeError:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def get_letter_for_cypher(self, cypher: str) -> Optional[List[str]]:
         return self._clmap[cypher]
@@ -248,7 +263,7 @@ class CypherLetterMap:
             solved_letters = []
             for letter in LETTERS:
                 if self._clmap[letter] is not None \
-                        and len(self._clmap[letter]) == 1:
+                    and len(self._clmap[letter]) == 1:
                     if self._clmap[letter][0] in solved_letters:
                         # 2 code letters with same letter mapping = no solution
                         raise ValueError(EXCEPT_MESSAGE)
@@ -260,7 +275,7 @@ class CypherLetterMap:
                 for solved in solved_letters:
                     if self._clmap[letter] is not None:
                         if len(self._clmap[letter]) != 1 \
-                                and (solved in self._clmap[letter]):
+                            and (solved in self._clmap[letter]):
                             self._clmap[letter].remove(solved)
                             if len(self._clmap[letter]) == 1:
                                 # new letter is now solved,
@@ -293,33 +308,65 @@ class SolutionTreeNode:
     def __init__(self,
                  coded_quote: str,
                  cypherletter_map: CypherLetterMap,
-                 wordtree: WordTreeNode = None):
+                 wordtree: WordTreeNode):
         self._coded_quote: str = coded_quote
         self._cypherletter_map: CypherLetterMap = cypherletter_map
-        if wordtree is None:
-            self._wordtree = WordTreeNode
         self._wordtree: WordTreeNode = wordtree
         self._children: List[SolutionTreeNode] = []
 
-    def generate_solutions(self) -> List[Tuple[str, Dict[str, List[str]]]]:
-        # choose first incomplete word from decoded quote
-        # get all possible word matches using WordTreeNode
-        # for each match, update coding dictionary with new matches from word
-        #   for each matching letter
-        #       check that new matching letter is in coding dict possibilities
-        #       if not, return []
-        #       if so, remove all other letters
-        #       update other letters using remove_solved_letters
-        #       return [] if remove_solved_letters fails
-        #   create child node and run generate_solutions on it
-        decoded_list: List[str] = string_to_caps_words(self._decoded_quote)
+    def generate_solutions(self) -> List[Tuple[str, CypherLetterMap]]:
+        # get first incomplete word from decoded quote
+        # if no incomplete words:
+        #   return [(decoded string, cypherletter map)]
+        # else:
+        #   get all possible word matches using WordTreeNode
+        #   if no matches, return [("", blank map)]
+        #   else:
+        #       for each match
+        #           create new child
+        #               deepcopy cypherletter map
+        #               create new map
+        #               add new word to new map (add_letters...)
+        #               intersect copy map and new map
+        #               use intersected copy map to make new SolnTreeNode
+        #           add new child to _children
+        #       for each child in _children
+        #           call generate_solutions
+        #           append each result to return list if str not "", and return
+
         coded_list: List[str] = string_to_caps_words(self._coded_quote)
+        decoded_list: List[str] = string_to_caps_words(
+            self._cypherletter_map.decrypt(self._coded_quote))
         incomplete_word: Tuple[str, str] = self._get_first_incomplete_word(
             coded_list, decoded_list)
         word_coded: str = incomplete_word[0]
         word_decoded: str = incomplete_word[1]
-        possible_matches: List[str] = self._wordtree.find_words(word_decoded)
-        # TODO: finish this
+        if word_coded == "":
+            return [(" ".join(decoded_list), self._cypherletter_map)]
+        else:
+            possible_matches: List[str] = self._wordtree.find_words(
+                word_decoded)
+            if len(possible_matches) == 0:
+                return [("", CypherLetterMap())]
+            else:
+                for match in possible_matches:
+                    self._children.append(self._make_child(word_coded,
+                                                           match))
+                return_list: List[Tuple[str, CypherLetterMap]] = []
+                for child in self._children:
+                    solutions: List[Tuple[str, CypherLetterMap]] \
+                        = child.generate_solutions()
+                    # TODO: Figure out how to remove duplicates
+                    for solution in solutions:
+                        if self._is_valid_solution(return_list, solution):
+                            return_list.append(solution)
+                return return_list
+        # TODO: Done? Test this!
+
+    def _is_valid_solution(self,
+                           return_list: List[Tuple[str, CypherLetterMap]],
+                           solution: Tuple[str, CypherLetterMap]) -> bool:
+        return solution[0] != "" and solution not in return_list
 
     def _get_first_incomplete_word(self,
                                    coded_list: List[str],
@@ -328,6 +375,15 @@ class SolutionTreeNode:
             if "_" in decoded_list[i]:
                 return coded_list[i], decoded_list[i]
         return "", ""
+
+    def _make_child(self,
+                    word_coded: str,
+                    word_decoded: str) -> 'SolutionTreeNode':
+        map_copy: CypherLetterMap = copy.deepcopy(self._cypherletter_map)
+        map_new: CypherLetterMap = CypherLetterMap()
+        map_new.add_letters_to_mapping(word_coded, word_decoded)
+        map_copy.intersect_mappings(map_new)
+        return SolutionTreeNode(self._coded_quote, map_copy, self._wordtree)
 
 
 # class Puzzle:
