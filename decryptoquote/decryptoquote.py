@@ -1,6 +1,32 @@
 # -*- coding: utf-8 -*-
 
-"""Main module."""
+"""
+Main module.
+"""
+# TODO new idea
+#   For each word in coded text, use WordPatterns to get possible pattern
+#   matches, and put in list of lists
+#   Each sub-list holds all possible pattern matches for that word
+#   Also need main index counter and list of sub-list index counters
+#   Main index counter gives index in main list where we try a possible match
+#     this round
+#   Each sub-index is index in sub-list of possible match to try this round
+#   Main index and all sub-indices start at 0 (i.e. first word)
+#   Also need simpler CypherLetterMap: Dict with coded letters as keys, value
+#     is either None (no match yet) or matching decoded letter
+#       Can also give currently decoded text
+#   Then use backtracking search from first word to last:
+#       Get list at main index, get word match at that list's sub-index
+#       Check for mismatches
+#           Mismatch = Any decoded
+#       If no mismatches, update CypherLetterMap (which updates decoded message)
+#         then increment main index
+#       If mismatch, increment list's subindex
+#       If subindex >= len(sub-list), backtrack:
+#           Set current subindex to 0
+#           Decrement main index
+#           Increment that subindex
+#       If main index >= len(main list), you have a valid solution!
 import copy
 import json
 import os
@@ -8,6 +34,8 @@ import pprint
 import re
 import string
 from typing import Dict, List, Optional, Union, Tuple
+
+import decryptoquote.decryptoquote
 
 UNKNOWN: str = "*"
 PATTERNS_JSON: str = "word_patterns.json"
@@ -21,18 +49,28 @@ EXCEPT_MESSAGE: str = "A code letter was left with no possible solution"
 
 
 class WordPatterns:
+    """
+    This class organizes a set of English words by the pattern of distinct
+    letters in each word. For example, "this" has the pattern "1.2.3.4", since
+    each letter is distinct, as does "code", while "noon" has the pattern
+    "1.2.2.1". Since Cryptoquotes use a substitution cypher, the coded and
+    decoded words will have the same pattern. This can be used to determine
+    which words are possible matches.
+
+    :param saved_patterns_path: path to saved pattern file
+    :param overwrite_json: if `True`, overwrites any existing saved patterns
+      file
+    :param corpus_file_path: path to language corpus file. This is required to
+      make a new saved patterns file
+    :exception IOError if corpus file is invalid
+    """
+
     def __init__(self,
-                 pattern_dict_file_path: str,
+                 saved_patterns_path: str,
                  overwrite_json: bool = False,
                  corpus_file_path: str = None) -> None:
-        """
-        Create WordPatterns instance from given corpus file
-            corpus file is large file of English text, .txt format
-        :param corpus_file_path: path to language corpus file
-        :exception IOError if corpus file is invalid
-        """
         # TODO: enforce Singleton?
-        if overwrite_json or not os.path.exists(pattern_dict_file_path):
+        if overwrite_json or not os.path.exists(saved_patterns_path):
             # we need a new patterns JSON, so get words from corpus text file
             self._patterns: Dict[str, List[str]] = {}
             try:
@@ -52,23 +90,35 @@ class WordPatterns:
                     f"Language model file not valid: {corpus_file_path}"
                 ) from err
             try:
-                with open(pattern_dict_file_path, "w") as file:
+                with open(saved_patterns_path, "w") as file:
                     json.dump(self._patterns, file)
             except Exception as err:
                 raise IOError(
-                    f"Patterns file not created correctly: {pattern_dict_file_path}"
+                    f"Patterns file not created correctly: {saved_patterns_path}"
                 ) from err
         else:
             # just load patterns JSON
-            with open(pattern_dict_file_path, "r") as file:
+            with open(saved_patterns_path, "r") as file:
                 self._patterns = json.load(file)
 
     @staticmethod
     def word_to_pattern(word: str) -> str:
         """
+        Determines the letter pattern for the word given. Each distinct letter
+        is given a unique number, starting from 1 and counting up. If a letter
+        occurs again, the original number is used. Numbers are separated by
+        periods.
 
-        :param word:
-        :return:
+        For example, the pattern for the word "noon" is "1.2.2.1". We start
+        with "n", designated with 1. We move on to "o", which gets 2. Since "o"
+        appears again, we repeat the 2, and finish with 1 for "n".
+
+        Apostrophes appear as themselves, not as numbers, but are still
+        separated by periods. For example, "didn't" has the pattern
+        "1.2.1.3.'.4".
+
+        :param word: given word
+        :return: pattern for that word
         """
         word = word.upper()
         pattern_num = 0
@@ -85,12 +135,26 @@ class WordPatterns:
         return ".".join(word_pattern)
 
     def pattern_to_match_words(self, pattern: str) -> List[str]:
+        """
+        Determines all matching words for a given pattern in the word patterns
+        database. Patterns are described in :meth:`word_to_pattern`.
+
+        :param pattern: given word pattern
+        :return: words matching that pattern
+        """
         if pattern not in self._patterns:
             return [pattern]
         else:
             return self._patterns[pattern]
 
     def code_word_to_match_words(self, code_word: str) -> List[str]:
+        """
+        Determines all words whose pattern matches that of the given code word,
+        and could therefore possibly be the solution for that word.
+
+        :param code_word: given code word
+        :return: real words matching code word's letter pattern
+        """
         pattern: str = self.word_to_pattern(code_word)
         return self.pattern_to_match_words(pattern)
 
@@ -101,82 +165,15 @@ class WordPatterns:
         pass  # TODO: stub
 
 
-class WordTreeNode:
-    def __init__(self):
-        self._children: Dict[str, WordTreeNode] = {}
-        self._word_end: bool = False
-
-    def add_word(self, word: str) -> None:
-        if len(word) == 0:
-            self._word_end = True
-        else:
-            word_first: str = word.upper()[0]
-            word_rest: str = word.upper()[1:]
-            if word[0] in self._children:
-                child: WordTreeNode = self._children[word_first]
-                child.add_word(word_rest)
-            else:
-                child: WordTreeNode = WordTreeNode()
-                self._children[word_first] = child
-                child.add_word(word_rest)
-
-    def is_word(self, word: str) -> bool:
-        if len(word) == 0:
-            return self._word_end
-        else:
-            word_first: str = word.upper()[0]
-            word_rest: str = word.upper()[1:]
-            if word_first in self._children:
-                child: WordTreeNode = self._children[word_first]
-                return child.is_word(word_rest)
-            else:
-                return False
-
-    def find_words(self, word: str) -> List[str]:
-        return self._find_words(word, [])
-
-    def _find_words(self, word: str, acc: List[str]) -> List[str]:
-        if len(word) == 0:
-            if not self._word_end:  # invalid word
-                return []
-            else:
-                return acc
-        else:
-            word_first: str = word.upper()[0]
-            word_rest: str = word.upper()[1:]
-            if word_first == "_":
-                # for each child letter,
-                # append child letter to copy of acc
-                # self.find_words(word_rest, acc copy)
-                # merge resulting lists together and return
-                return_value: List[str] = []
-                for key, value in self._children.items():
-                    new_acc = []
-                    if len(acc) > 0:
-                        new_acc.append(acc[0] + key)
-                    else:
-                        new_acc.append(key)
-                    # return_value.extend(self._find_words(word_rest, new_acc))
-                    rec_result = value._find_words(word_rest, new_acc)
-                    return_value = return_value + rec_result
-                return return_value
-            elif word_first in self._children.keys():
-                # append word_first to end of acc
-                # return self.find_words(word_rest, acc
-                new_acc = []
-                if len(acc) > 0:
-                    new_acc.append(acc[0] + word_first)
-                else:
-                    new_acc.append(word_first)
-                child: WordTreeNode = self._children[word_first]
-                return child._find_words(word_rest, new_acc)
-            else:
-                return []
-
-
 class CypherLetterMap:
+    """
+    This class maps coded letters to matching decoded letters, or to `None` if
+    no matching value has been determined.
+    """
+
     def __init__(self):
-        self._clmap: Dict[str, Optional[List[str]]] = {}
+        self._clmap: Dict[str, Optional[str]] = {}
+        self._past_coded_words: List[str] = []
         for letter in LETTERS:
             self._clmap[letter] = None
 
@@ -187,12 +184,11 @@ class CypherLetterMap:
     def __str__(self):
         key: List[str] = []
         for letter in LETTERS:
-            if self._clmap[letter] is None \
-                or len(self._clmap[letter]) != 1:
+            if self._clmap[letter] is None:
                 key.append("_")
             else:
-                key.append(self._clmap[letter][0])
-        return "Decoder:\n{0}\n{1}".format(LETTERS, "".join(key))
+                key.append(self._clmap[letter])
+        return f"Decoder:\n{LETTERS}\n{''.join(key)}"
 
     def __eq__(self, other):
         try:
@@ -210,180 +206,165 @@ class CypherLetterMap:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def get_letter_for_cypher(self, cypher: str) -> Optional[List[str]]:
-        return self._clmap[cypher]
+    def get_letter_for_cypher(self, coded_letter: str) -> Optional[str]:
+        """
+        Get the matching decoded letter for the given coded letter
 
-    def decrypt(self, code: str) -> str:
-        code = code.upper()
-        decoded: List[str] = list(copy.deepcopy(code))
-        for i in range(len(code)):
-            letter: str = code[i]
-            if letter in LETTERS:  # is it an A-Z letter?
-                match: Optional[List[str]] = \
-                    self.get_letter_for_cypher(letter)
-                if match is not None and len(match) == 1:
-                    decoded[i] = match[0]
+        :param coded_letter: given coded letter
+        :return: matching decoded letter, or `None` if no match
+        """
+        return self._clmap[coded_letter.upper()]
+
+    def decrypt(self, coded_text: str) -> str:
+        """
+        Decrypts coded text based on current cypher letter map. If coded
+        letters do not have decoded matches, the underscore ("_") will be used
+        in its place.
+
+        :param coded_text: coded text to decrypt
+        :return: decrypted version of coded text, which may have underscores if
+          letters are not decoded
+        """
+        decoded_text = []
+        for letter in coded_text:
+            if letter in self._clmap.keys():
+                if self._clmap[letter] is None:
+                    decoded_text.append('_')
                 else:
-                    decoded[i] = "_"
-        return "".join(decoded)
-
-    def add_letters_to_mapping(self,
-                               word: str,
-                               match: str) -> None:
-        for i in range(len(word)):
-            if match[i] not in PUNCTUATION:
-                if self._clmap[word[i]] is None:
-                    self._clmap[word[i]] = [match[i]]
-                elif match[i] not in self._clmap[word[i]]:
-                    self._clmap[word[i]].append(match[i])
-
-    def intersect_mappings(self,
-                           other: 'CypherLetterMap') -> None:
-        for letter in LETTERS:
-            if self._clmap[letter] is None:
-                self._clmap[letter] = copy.deepcopy(
-                    other.get_letter_for_cypher(letter))
-            elif other.get_letter_for_cypher(letter) is not None:
-                intersection: List[str] = []
-                for mapped_letter in self._clmap[letter]:
-                    if mapped_letter in other.get_letter_for_cypher(letter):
-                        if mapped_letter not in intersection:
-                            intersection.append(mapped_letter)
-                if not intersection:
-                    raise ValueError(EXCEPT_MESSAGE)
-                else:
-                    self._clmap[letter] = intersection
-
-    def remove_solved_letters_from_map(self) -> None:
-        done: bool = False
-        while not done:
-            done = True  # assume done
-
-            # scan through map and track solved letters
-            solved_letters = []
-            for letter in LETTERS:
-                if self._clmap[letter] is not None \
-                    and len(self._clmap[letter]) == 1:
-                    if self._clmap[letter][0] in solved_letters:
-                        # 2 code letters with same letter mapping = no solution
-                        raise ValueError(EXCEPT_MESSAGE)
-                    else:
-                        solved_letters.append(self._clmap[letter][0])
-
-            # removed solved letters as possibilities for other letters
-            for letter in LETTERS:
-                for solved in solved_letters:
-                    if self._clmap[letter] is not None:
-                        if len(self._clmap[letter]) != 1 \
-                            and (solved in self._clmap[letter]):
-                            self._clmap[letter].remove(solved)
-                            if len(self._clmap[letter]) == 1:
-                                # new letter is now solved,
-                                # so we're not done yet!
-                                done = False
-                            elif len(self._clmap[letter]) == 0:
-                                raise ValueError(EXCEPT_MESSAGE)
-                        elif len(self._clmap[letter]) == 0:
-                            raise ValueError(EXCEPT_MESSAGE)
-                    else:
-                        # replace with all letters,
-                        # then remove this letter and solved letter
-                        self._clmap[letter] = [
-                            char for char in LETTERS if char not in [letter,
-                                                                     solved]]
-    #
-    # def get_cypherletter_map_as_string(
-    #     cypherletter_map: Dict[str, List[str]]) -> str:
-    #     key: List[str] = []
-    #     for letter in LETTERS:
-    #         if cypherletter_map[letter] is None \
-    #             or len(cypherletter_map[letter]) != 1:
-    #             key.append("_")
-    #         else:
-    #             key.append(cypherletter_map[letter][0])
-    #     return "Decoder:\n{0}\n{1}".format(LETTERS, "".join(key))
-
-
-class SolutionTreeNode:
-    def __init__(self,
-                 coded_quote: str,
-                 cypherletter_map: CypherLetterMap,
-                 wordtree: WordTreeNode):
-        self._coded_quote: str = coded_quote
-        self._cypherletter_map: CypherLetterMap = cypherletter_map
-        self._wordtree: WordTreeNode = wordtree
-        self._children: List[SolutionTreeNode] = []
-
-    def generate_solutions(self) -> List[Tuple[str, CypherLetterMap]]:
-        # get first incomplete word from decoded quote
-        # if no incomplete words:
-        #   return [(decoded string, cypherletter map)]
-        # else:
-        #   get all possible word matches using WordTreeNode
-        #   if no matches, return [("", blank map)]
-        #   else:
-        #       for each match
-        #           create new child
-        #               deepcopy cypherletter map
-        #               create new map
-        #               add new word to new map (add_letters...)
-        #               intersect copy map and new map
-        #               use intersected copy map to make new SolnTreeNode
-        #           add new child to _children
-        #       for each child in _children
-        #           call generate_solutions
-        #           append each result to return list if str not "", and return
-
-        coded_list: List[str] = string_to_caps_words(self._coded_quote)
-        decoded_list: List[str] = string_to_caps_words(
-            self._cypherletter_map.decrypt(self._coded_quote))
-        incomplete_word: Tuple[str, str] = self._get_first_incomplete_word(
-            coded_list, decoded_list)
-        word_coded: str = incomplete_word[0]
-        word_decoded: str = incomplete_word[1]
-        if word_coded == "":
-            return [(" ".join(decoded_list), self._cypherletter_map)]
-        else:
-            possible_matches: List[str] = self._wordtree.find_words(
-                word_decoded)
-            if len(possible_matches) == 0:
-                return [("", CypherLetterMap())]
+                    decoded_text.append(self._clmap[letter])
             else:
-                for match in possible_matches:
-                    self._children.append(self._make_child(word_coded,
-                                                           match))
-                return_list: List[Tuple[str, CypherLetterMap]] = []
-                for child in self._children:
-                    solutions: List[Tuple[str, CypherLetterMap]] \
-                        = child.generate_solutions()
-                    # TODO: Figure out how to remove duplicates
-                    for solution in solutions:
-                        if self._is_valid_solution(return_list, solution):
-                            return_list.append(solution)
-                return return_list
-        # TODO: Done? Test this!
+                decoded_text.append(letter)
+        return "".join(decoded_text)
 
-    def _is_valid_solution(self,
-                           return_list: List[Tuple[str, CypherLetterMap]],
-                           solution: Tuple[str, CypherLetterMap]) -> bool:
-        return solution[0] != "" and solution not in return_list
+    def add_word_to_mapping(self,
+                            coded_word: str,
+                            decoded_word: str):
+        """
+        Updates the cypher letter map using the given coded word and its
+        decoded form.
 
-    def _get_first_incomplete_word(self,
-                                   coded_list: List[str],
-                                   decoded_list: List[str]) -> Tuple[str, str]:
-        for i in range(len(coded_list)):
-            if "_" in decoded_list[i]:
-                return coded_list[i], decoded_list[i]
-        return "", ""
+        :param coded_word: word from coded puzzle to add
+        :param decoded_word: matching decoded word
+        """
+        if len(coded_word) != len(decoded_word):
+            raise ValueError("Coded and decoded words must "
+                             "have the same length")
+        coded_word = coded_word.upper()
+        decoded_word = decoded_word.upper()
+        self._past_coded_words.append(coded_word)
+        word_matches = zip(coded_word, decoded_word)
+        for letter_match in word_matches:
+            coded_letter, decoded_letter = letter_match
+            if coded_letter not in PUNCTUATION \
+                    and decoded_letter not in PUNCTUATION:
+                # pair exists in map: no action
+                if self._clmap[coded_letter] == decoded_letter:
+                    continue
+                # old key, new value
+                if self._clmap[coded_letter] is not None:
+                    raise ValueError(
+                        f"Coded letter {coded_letter} already has a match")
+                # same value for 2 keys
+                if decoded_letter in self._clmap.values():
+                    raise ValueError(
+                        f"Decoded letter {decoded_letter} is already mapped to "
+                        f"another coded letter")
+                self._clmap[coded_letter] = decoded_letter
+            else:
+                if coded_letter != decoded_letter:
+                    raise ValueError(
+                        f"Coded word {coded_word} and decoded word {decoded_word} "
+                        f"have different punctuation locations")
 
-    def _make_child(self,
-                    word_coded: str,
-                    word_decoded: str) -> 'SolutionTreeNode':
-        map_copy: CypherLetterMap = copy.deepcopy(self._cypherletter_map)
-        map_new: CypherLetterMap = CypherLetterMap()
-        map_new.add_letters_to_mapping(word_coded, word_decoded)
-        map_copy.intersect_mappings(map_new)
-        return SolutionTreeNode(self._coded_quote, map_copy, self._wordtree)
+    def remove_last_word_from_mapping(self):
+        """
+        Updates the cypher letter dictionary by undoing the last word addition.
+        """
+        word_to_remove: str = self._past_coded_words.pop()
+        for letter in word_to_remove:
+            self._clmap[letter] = None
+
+
+# class SolutionTreeNode:
+#     def __init__(self,
+#                  coded_quote: str,
+#                  cypherletter_map: CypherLetterMap,
+#                  wordtree: WordTreeNode):
+#         self._coded_quote: str = coded_quote
+#         self._cypherletter_map: CypherLetterMap = cypherletter_map
+#         self._wordtree: WordTreeNode = wordtree
+#         self._children: List[SolutionTreeNode] = []
+#
+#     def generate_solutions(self) -> List[Tuple[str, CypherLetterMap]]:
+#         # get first incomplete word from decoded quote
+#         # if no incomplete words:
+#         #   return [(decoded string, cypherletter map)]
+#         # else:
+#         #   get all possible word matches using WordTreeNode
+#         #   if no matches, return [("", blank map)]
+#         #   else:
+#         #       for each match
+#         #           create new child
+#         #               deepcopy cypherletter map
+#         #               create new map
+#         #               add new word to new map (add_letters...)
+#         #               intersect copy map and new map
+#         #               use intersected copy map to make new SolnTreeNode
+#         #           add new child to _children
+#         #       for each child in _children
+#         #           call generate_solutions
+#         #           append each result to return list if str not "", and return
+#
+#         coded_list: List[str] = string_to_caps_words(self._coded_quote)
+#         decoded_list: List[str] = string_to_caps_words(
+#             self._cypherletter_map.decrypt(self._coded_quote))
+#         incomplete_word: Tuple[str, str] = self._get_first_incomplete_word(
+#             coded_list, decoded_list)
+#         word_coded: str = incomplete_word[0]
+#         word_decoded: str = incomplete_word[1]
+#         if word_coded == "":
+#             return [(" ".join(decoded_list), self._cypherletter_map)]
+#         else:
+#             possible_matches: List[str] = self._wordtree.find_words(
+#                 word_decoded)
+#             if len(possible_matches) == 0:
+#                 return [("", CypherLetterMap())]
+#             else:
+#                 for match in possible_matches:
+#                     self._children.append(self._make_child(word_coded,
+#                                                            match))
+#                 return_list: List[Tuple[str, CypherLetterMap]] = []
+#                 for child in self._children:
+#                     solutions: List[Tuple[str, CypherLetterMap]] \
+#                         = child.generate_solutions()
+#                     # TODO: Figure out how to remove duplicates
+#                     for solution in solutions:
+#                         if self._is_valid_solution(return_list, solution):
+#                             return_list.append(solution)
+#                 return return_list
+#         # TODO: Done? Test this!
+#
+#     def _is_valid_solution(self,
+#                            return_list: List[Tuple[str, CypherLetterMap]],
+#                            solution: Tuple[str, CypherLetterMap]) -> bool:
+#         return solution[0] != "" and solution not in return_list
+#
+#     def _get_first_incomplete_word(self,
+#                                    coded_list: List[str],
+#                                    decoded_list: List[str]) -> Tuple[str, str]:
+#         for i in range(len(coded_list)):
+#             if "_" in decoded_list[i]:
+#                 return coded_list[i], decoded_list[i]
+#         return "", ""
+#
+#     def _make_child(self,
+#                     word_coded: str,
+#                     word_decoded: str) -> 'SolutionTreeNode':
+#         map_copy: CypherLetterMap = copy.deepcopy(self._cypherletter_map)
+#         map_new: CypherLetterMap = CypherLetterMap()
+#         map_new.add_word_to_mapping(word_coded, word_decoded)
+#         map_copy.intersect_mappings(map_new)
+#         return SolutionTreeNode(self._coded_quote, map_copy, self._wordtree)
 
 
 # class Puzzle:
@@ -811,21 +792,21 @@ def string_to_caps_words(in_string: str) -> List[str]:
 #     return cypherletter_map
 
 
-def decrypt_with_cypherletter_map(
-    code: str,
-    cypherletter_map: CypherLetterMap) -> str:
-    code = code.upper()
-    decoded: List[str] = list(copy.deepcopy(code))
-    for i in range(len(code)):
-        letter: str = code[i]
-        if letter in LETTERS:  # is it an A-Z letter?
-            match: Optional[List[str]] = \
-                cypherletter_map.get_letter_for_cypher(letter)
-            if match is not None and len(match) == 1:
-                decoded[i] = match[0]
-            else:
-                decoded[i] = "_"
-    return "".join(decoded)
+# def decrypt_with_cypherletter_map(
+#     code: str,
+#     cypherletter_map: CypherLetterMap) -> str:
+#     code = code.upper()
+#     decoded: List[str] = list(copy.deepcopy(code))
+#     for i in range(len(code)):
+#         letter: str = code[i]
+#         if letter in LETTERS:  # is it an A-Z letter?
+#             match: Optional[List[str]] = \
+#                 cypherletter_map.get_letter_for_cypher(letter)
+#             if match is not None and len(match) == 1:
+#                 decoded[i] = match[0]
+#             else:
+#                 decoded[i] = "_"
+#     return "".join(decoded)
 
 
 # def get_cypherletter_map_as_string(
@@ -840,8 +821,8 @@ def decrypt_with_cypherletter_map(
 #     return "Decoder:\n{0}\n{1}".format(LETTERS, "".join(key))
 
 
-def is_quote_solved(cypherletter_map: Dict[str, Optional[List[str]]]) -> bool:
-    # TODO: make unit tests
+def is_quote_solved(cypherletter_map: CypherLetterMap,
+                    coded_quote: str) -> bool:
     # TODO: develop this
     return False  # stub
 
@@ -869,7 +850,7 @@ def decrypt_quote(coded_quote: str,
         if len(matches) == 0:
             continue
         for match in matches:
-            new_map.add_letters_to_mapping(word, match)
+            new_map.add_word_to_mapping(word, match)
         final_map.intersect_mappings(new_map)
     final_map.remove_solved_letters_from_map(final_map)
     decoded_quote: str = decrypt_with_cypherletter_map(coded_quote, final_map)

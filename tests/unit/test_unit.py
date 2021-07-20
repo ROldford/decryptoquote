@@ -2,10 +2,35 @@
 # -*- coding: utf-8 -*-
 
 """Unit tests for `decryptoquote` package."""
+from typing import List, Tuple
 
 import pytest
-# from decryptoquote import decryptoquote
+from decryptoquote import decryptoquote
 
+def test_string_to_caps_words():
+    assert decryptoquote.string_to_caps_words("Svool, R'n z hgirmt!") == \
+           ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
+
+
+def test_is_quote_solved():
+    encrypted: str = "ABCD EFGHD"
+    code_matches: List[Tuple[str, str]] = [("ABCD", "THIS"),
+                                            ("EFGHD", "RULES")]
+    iqs_case(encrypted, code_matches, True)
+    code_matches.append(("IJKLMNOPQRSTUVWXYZ",
+                        "ABCDFGJKMNOPQZVWXY"))
+    iqs_case(encrypted, code_matches, True)
+    code_matches = [("ABCD", "THIS"), ("EFH", "RUE")]
+    iqs_case(encrypted, code_matches, False)
+
+
+def iqs_case(encrypted: str,
+             code_matches: List[Tuple[str, str]],
+             pass_case: bool) -> None:
+    clm: decryptoquote.CypherLetterMap = decryptoquote.CypherLetterMap()
+    for code_match in code_matches:
+        clm.add_word_to_mapping(code_match[0], code_match[1])
+    assert decryptoquote.is_quote_solved(clm, encrypted) == pass_case
 
 # def test_decrypt_with_map():
 #     # map1: Dict[str, Optional[List[str]]] = {
