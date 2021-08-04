@@ -4,7 +4,6 @@ verify_ssl = true
 
 [dev-packages]
 bumpversion = "*"
-wheel = "*"
 watchdog = "*"
 flake8 = "*"
 tox = "*"
