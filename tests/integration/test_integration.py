@@ -54,7 +54,7 @@ class TestIntegration(object):
         },
     ]
 
-    @pytest.mark.parametrize("test_strings", test_data)
+    @pytest.mark.parametrize("test_strings", test_data_noauthor)
     def test_no_author(self, test_strings):
         coded_quote: str = test_strings[self.CODED_QUOTE]
         decoded_quote: str = test_strings[self.DECODED_QUOTE]

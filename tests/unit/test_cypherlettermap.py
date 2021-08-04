@@ -32,7 +32,7 @@ def test_get_blank_cypherletter_map(cypherletter_map):
         assert cypherletter_map.get_letter_for_cypher(letter) is None
 
 
-def test_add_letters_to_mapping(cypherletter_map):
+def test_add_word_to_mapping(cypherletter_map):
     others: str = "EFGHIJKLMNOPQRSTUVWXYZ"
     word: str = "abcd"
     match: str = "this"
@@ -63,7 +63,7 @@ def test_add_letters_to_mapping(cypherletter_map):
         assert cypherletter_map.get_letter_for_cypher(letter) is None
 
 
-def test_add_letters_to_mapping_exceptions(cypherletter_map):
+def test_add_word_to_mapping_exceptions(cypherletter_map):
     with pytest.raises(ValueError) as e:
         cypherletter_map.add_word_to_mapping("ABC", "THIS")
     assert str(e.value) == "Coded and decoded words must have the same length"
@@ -104,10 +104,61 @@ def test_add_letters_to_map_punctuation(cypherletter_map):
                            f"different punctuation locations"
 
 
+def test_remove_word_from_mapping(cypherletter_map):
+    others: str = "EFGHIJKLMNOPQRSTUVWXYZ"
+    word: str = "abcd"
+    match: str = "this"
+    cypherletter_map.add_word_to_mapping(word, match)
+    word = "EFG"
+    match = "ONE"
+    cypherletter_map.add_word_to_mapping(word, match)
+    assert cypherletter_map.get_letter_for_cypher("E") == "O"
+    assert cypherletter_map.get_letter_for_cypher("F") == "N"
+    assert cypherletter_map.get_letter_for_cypher("G") == "E"
+    for letter in others[3:]:
+        assert cypherletter_map.get_letter_for_cypher(letter) is None
+    cypherletter_map.remove_last_word_from_mapping()
+    assert cypherletter_map.get_letter_for_cypher("E") is None
+    assert cypherletter_map.get_letter_for_cypher("F") is None
+    assert cypherletter_map.get_letter_for_cypher("G") is None
+    for letter in others[3:]:
+        assert cypherletter_map.get_letter_for_cypher(letter) is None
+    cypherletter_map.remove_last_word_from_mapping()
+    for letter in decryptoquote.LETTERS:
+        assert cypherletter_map.get_letter_for_cypher(letter) is None
 
-def test_decrypt_with_map(cypherletter_map,
-                          cypherletter_map2,
-                          cypherletter_map3):
+
+def test_does_word_coding_work(cypherletter_map):
+    word: str = "abcd"
+    match: str = "this"
+    cypherletter_map.add_word_to_mapping(word, match)
+    # works
+    word_coding_case(cypherletter_map, "efg", "one", True)  # all new
+    word_coding_case(cypherletter_map, "cd", "is", True)  # old matches
+    word_coding_case(cypherletter_map, "'.", "'.", True)  # good punctuation
+    # doesn't work
+    word_coding_case(cypherletter_map, "cd", "it", False)  # bad remap
+    word_coding_case(cypherletter_map, "efg", "two", False)  # double t
+    word_coding_case(cypherletter_map, "ef", "one", False)  # bad length
+    word_coding_case(cypherletter_map, "'.", ".'", False)  # punct mismatch
+    word_coding_case(cypherletter_map, "'.", "is", False)  # punct mismatch
+    word_coding_case(cypherletter_map, "ef", ".'", False)  # punct mismatch
+
+
+def word_coding_case(
+    cypherletter_map,
+    coded_word: str,
+    possible_decoded_word: str,
+    expected: bool
+):
+    mapping_works = cypherletter_map.does_word_coding_work(
+        coded_word, possible_decoded_word)
+    assert mapping_works == expected
+
+
+def test_decode_with_map(cypherletter_map,
+                         cypherletter_map2,
+                         cypherletter_map3):
     # map1: Dict[str, Optional[List[str]]] = {
     #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
     #     'F': ["U"], 'G': ["T"], 'H': ["S"], 'I': ["R"], 'J': ["Q"],
@@ -138,9 +189,9 @@ def test_decrypt_with_map(cypherletter_map,
     expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
     expected2: str = "ZYXWVUTSRQP___LKJIHGFEDCBA"
     expected3: str = "Z________________________A"
-    assert cypherletter_map.decrypt(decryptoquote.LETTERS) == expected1
-    assert cypherletter_map2.decrypt(decryptoquote.LETTERS) == expected2
-    assert cypherletter_map3.decrypt(decryptoquote.LETTERS) == expected3
+    assert cypherletter_map.decode(decryptoquote.LETTERS) == expected1
+    assert cypherletter_map2.decode(decryptoquote.LETTERS) == expected2
+    assert cypherletter_map3.decode(decryptoquote.LETTERS) == expected3
 
 
 def test_str(cypherletter_map, cypherletter_map2, cypherletter_map3):

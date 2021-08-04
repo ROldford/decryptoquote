@@ -59,7 +59,6 @@ def test_init_json_file_invalid(fs):
         json_string = file.read().replace('\n', '')
         parsed_json = json.loads(json_string)
         assert parsed_json == TEST_PATTERNS
-    # assert 0 # TODO: stub
 
 
 def test_missing_corpus_file(fs):

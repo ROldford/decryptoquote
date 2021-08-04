@@ -7,92 +7,65 @@ from typing import List, Tuple
 import pytest
 from decryptoquote import decryptoquote
 
+
 def test_string_to_caps_words():
     assert decryptoquote.string_to_caps_words("Svool, R'n z hgirmt!") == \
            ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
 
 
-def test_is_quote_solved():
-    encrypted: str = "ABCD EFGHD"
-    code_matches: List[Tuple[str, str]] = [("ABCD", "THIS"),
-                                            ("EFGHD", "RULES")]
-    iqs_case(encrypted, code_matches, True)
-    code_matches.append(("IJKLMNOPQRSTUVWXYZ",
-                        "ABCDFGJKMNOPQZVWXY"))
-    iqs_case(encrypted, code_matches, True)
-    code_matches = [("ABCD", "THIS"), ("EFH", "RUE")]
-    iqs_case(encrypted, code_matches, False)
+def test_decrypt_quote():
+    coded_quote: str = "OIVD DIM SMQSAM OVKD XH PMGF HXLSAM. DIMF OVKD VK " \
+                       "VLMGXBV VH ZQQC VH XDH SGQLXHM."
+    coded_author: str = "TVGTVGV YQGCVK"
+    decoded_quote: str = "WHAT THE PEOPLE WANT IS VERY SIMPLE. THEY WANT AN " \
+                         "AMERICA AS GOOD AS ITS PROMISE."
+    decoded_author = "BARBARA JORDAN"
+
+    puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author)
+
+    coded_quote = "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh nbaae, "\
+                  "byh tyqrvzqblyrh ge abqryzbo zeqbyye. Osjr lv znr inbly "\
+                  "cnrqrge zs glyh b inloh zs lzv abqryzv."
+    coded_author = "Bgqbnbw Olyisoy"
+    decoded_quote = "IT IS MY PLEASURE THAT MY CHILDREN ARE FREE AND HAPPY, "\
+                    "AND UNRESTRAINED BY PARENTAL TYRANNY. LOVE IS THE "\
+                    "CHAIN WHEREBY TO BIND A CHILD TO ITS PARENTS."
+    decoded_author = "ABRAHAM LINCOLN"
+
+    puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author)
 
 
-def iqs_case(encrypted: str,
-             code_matches: List[Tuple[str, str]],
-             pass_case: bool) -> None:
-    clm: decryptoquote.CypherLetterMap = decryptoquote.CypherLetterMap()
-    for code_match in code_matches:
-        clm.add_word_to_mapping(code_match[0], code_match[1])
-    assert decryptoquote.is_quote_solved(clm, encrypted) == pass_case
+def puzzle_works_check(coded_quote, decoded_quote):
+    coded_words = decryptoquote.string_to_caps_words(coded_quote)
+    decoded_words = decryptoquote.string_to_caps_words(decoded_quote)
 
-# def test_decrypt_with_map():
-#     # map1: Dict[str, Optional[List[str]]] = {
-#     #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
-#     #     'F': ["U"], 'G': ["T"], 'H': ["S"], 'I': ["R"], 'J': ["Q"],
-#     #     'K': ["P"], 'L': ["O"], 'M': ["N"], 'N': ["M"], 'O': ["L"],
-#     #     'P': ["K"], 'Q': ["J"], 'R': ["I"], 'S': ["H"], 'T': ["G"],
-#     #     'U': ["F"], 'V': ["E"], 'W': ["D"], 'X': ["C"], 'Y': ["B"], 'Z': ["A"],
-#     # }
-#     map1: decryptoquote.CypherLetterMap = decryptoquote.CypherLetterMap()
-#     map1.add_letters_to_mapping("ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-#                                 "ZYXWVUTSRQPONMLKJIHGFEDCBA")
-#     # map2: Dict[str, Optional[List[str]]] = {
-#     #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
-#     #     'F': ["U"], 'G': ["T"], 'H': ["S"], 'I': ["R"], 'J': ["Q"],
-#     #     'K': ["P"], 'L': ["M", "N"], 'M': ["L", "N"], 'N': ["L", "M"],
-#     #     'O': ["L"],
-#     #     'P': ["K"], 'Q': ["J"], 'R': ["I"], 'S': ["H"], 'T': ["G"],
-#     #     'U': ["F"], 'V': ["E"], 'W': ["D"], 'X': ["C"], 'Y': ["B"], 'Z': ["A"],
-#     # }
-#     map2: decryptoquote.CypherLetterMap = decryptoquote.CypherLetterMap()
-#     map2.add_letters_to_mapping("ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-#                                 "ZYXWVUTSRQPMLLLKJIHGFEDCBA")
-#     map2.add_letters_to_mapping("LMN", "NNM")
-#     # map3: Dict[str, Optional[List[str]]] = {
-#     #     'A': ["Z"], 'B': None, 'C': None, 'D': None, 'E': None,
-#     #     'F': None, 'G': None, 'H': None, 'I': None, 'J': None,
-#     #     'K': None, 'L': None, 'M': None, 'N': None, 'O': None,
-#     #     'P': None, 'Q': None, 'R': None, 'S': None, 'T': None,
-#     #     'U': None, 'V': None, 'W': None, 'X': None, 'Y': None, 'Z': ["A"],
-#     # }
-#     map3: decryptoquote.CypherLetterMap = decryptoquote.CypherLetterMap()
-#     map3.add_letters_to_mapping("AZ", "ZA")
-#     expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
-#     expected2: str = "ZYXWVUTSRQP___LKJIHGFEDCBA"
-#     expected3: str = "Z________________________A"
-#     assert decryptoquote.decrypt_with_cypherletter_map(decryptoquote.LETTERS,
-#                                                        map1) == expected1
-#     assert decryptoquote.decrypt_with_cypherletter_map(decryptoquote.LETTERS,
-#                                                        map2) == expected2
-#     assert decryptoquote.decrypt_with_cypherletter_map(decryptoquote.LETTERS,
-#                                                        map3) == expected3
+    assert len(coded_words) == len(decoded_words)
+    words = zip(coded_words, decoded_words)
+    cypher_letter_map = decryptoquote.CypherLetterMap()
+    for word_pair in words:
+        coded_word, decoded_word = word_pair
+        cypher_letter_map.add_word_to_mapping(coded_word, decoded_word)
+    actual_decoded_quote = cypher_letter_map.decode(coded_quote.upper())
+    assert actual_decoded_quote == decoded_quote.upper()
 
 
-# def test_decrypt_quote():
-#     # coded_quote: str = "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh " \
-#     #                    "nbaae, byh tyqrvzqblyrh ge abqryzzbo zeqbyye. Osjr " \
-#     #                    "lv znr inbly cnrqrge zs glyh b inloh zs lzv abqryzv."
-#     # coded_author: str = "Bgqbnbw Olyisoy"
-#     coded_quote: str = "OIVD DIM SMQSAM OVKD XH PMGF HXLSAM. DIMF OVKD VK " \
-#                        "VLMGXBV VH ZQQC VH XDH SGQLXHM."
-#     coded_author: str = "TVGTVGV YQGCVK"
-#     author_result: str = decryptoquote.decrypt_quote(coded_quote, coded_author)
-#     no_author_result: str = decryptoquote.decrypt_quote(coded_quote)
-#     assert no_author_result == "WHAT THE PEOPLE WANT IS VERY SIMPLE.  THEY WANT " \
-#                                "AN AMERICA AS GOOD AS ITS PROMISE."
-#     assert author_result == no_author_result + " - BARBARA JORDAN"
-#     # assert no_author_result == "IT IS MY PLEASURE THAT MY CHILDREN ARE FREE " \
-#     #                            "AND HAPPY, AND UNRESTRAINED BY PARENTAL " \
-#     #                            "TYRANNY. LOVE IS THE CHAIN WHEREBY TO BIND A " \
-#     #                            "CHILD TO ITS PARENTS."
-#     # assert author_result == "IT IS MY PLEASURE THAT MY CHILDREN ARE FREE AND " \
-#     #                         "HAPPY, AND UNRESTRAINED BY PARENTAL TYRANNY. " \
-#     #                         "LOVE IS THE CHAIN WHEREBY TO BIND A CHILD TO " \
-#     #                         "ITS PARENTS. - ABRAHAM LINCOLN "
+def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
+    puzzle_works_check(coded_quote, decoded_quote)
+    author_result: str = decryptoquote.decrypt_quote(
+        coded_quote,
+        coded_author,
+        rebuild_patterns=True)
+    no_author_result: str = decryptoquote.decrypt_quote(
+        coded_quote,
+        rebuild_patterns=True)
+    # author_result_with_cypher: str = decryptoquote.decrypt_quote(
+    #     coded_quote,
+    #     show_cypher=True,
+    #     rebuild_patterns=True)
+    # print(author_result_with_cypher)
+    # print(author_result)
+    assert no_author_result == decoded_quote
+    actual_author = author_result.split("\n")[1]
+    for letter_pair in zip(decoded_author, actual_author):
+        expected_letter, actual_letter = letter_pair
+        assert (expected_letter == actual_letter or actual_letter == '_')
