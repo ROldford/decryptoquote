@@ -33,34 +33,34 @@ def test_get_blank_cypherletter_map(cypherletter_map):
 
 
 def test_add_word_to_mapping(cypherletter_map):
-    others: str = "EFGHIJKLMNOPQRSTUVWXYZ"
     word: str = "abcd"
-    match: str = "this"
-    cypherletter_map.add_word_to_mapping(word, match)
-    assert cypherletter_map.get_letter_for_cypher("A") == "T"
-    assert cypherletter_map.get_letter_for_cypher("B") == "H"
-    assert cypherletter_map.get_letter_for_cypher("C") == "I"
-    assert cypherletter_map.get_letter_for_cypher("D") == "S"
-    for letter in others:
-        assert cypherletter_map.get_letter_for_cypher(letter) is None
+    match = "this"
+    others: str = "EFGHIJKLMNOPQRSTUVWXYZ"
+    cypherletter_map = word_add_case(cypherletter_map, word, match, others)
     word = "EFG"
     match = "ONE"
     others = others[3:]
-    cypherletter_map.add_word_to_mapping(word, match)
-    assert cypherletter_map.get_letter_for_cypher("E") == "O"
-    assert cypherletter_map.get_letter_for_cypher("F") == "N"
-    assert cypherletter_map.get_letter_for_cypher("G") == "E"
-    for letter in others:
-        assert cypherletter_map.get_letter_for_cypher(letter) is None
+    cypherletter_map = word_add_case(cypherletter_map, word, match, others)
     word = "HEIJD"
     match = "wOrKs"
     others = others[3:]
+    cypherletter_map = word_add_case(cypherletter_map, word, match, others)
+
+
+def word_add_case(
+    cypherletter_map: decryptoquote.CypherLetterMap,
+    word: str,
+    match: str,
+    others: str
+) -> decryptoquote.CypherLetterMap:
     cypherletter_map.add_word_to_mapping(word, match)
-    assert cypherletter_map.get_letter_for_cypher("H") == "W"
-    assert cypherletter_map.get_letter_for_cypher("I") == "R"
-    assert cypherletter_map.get_letter_for_cypher("J") == "K"
-    for letter in others:
+    for letter_pair in zip(word.upper(), match.upper()):
+        coded, decoded = letter_pair
+        assert cypherletter_map.get_letter_for_cypher(coded) == decoded
+    for letter in others.upper():
         assert cypherletter_map.get_letter_for_cypher(letter) is None
+    return cypherletter_map
+
 
 
 def test_add_word_to_mapping_exceptions(cypherletter_map):
@@ -68,7 +68,7 @@ def test_add_word_to_mapping_exceptions(cypherletter_map):
         cypherletter_map.add_word_to_mapping("ABC", "THIS")
     assert str(e.value) == "Coded and decoded words must have the same length"
     word: str = "ABCD"
-    match: str = "THIS"
+    match = "THIS"
     cypherletter_map.add_word_to_mapping(word, match)
     word = "CD"
     match = "AT"
@@ -92,7 +92,7 @@ def test_add_word_to_mapping_exceptions(cypherletter_map):
 
 def test_add_letters_to_map_punctuation(cypherletter_map):
     word: str = "!"
-    match: str = "!"
+    match = "!"
     cypherletter_map.add_word_to_mapping(word, match)
     for letter in decryptoquote.LETTERS:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
@@ -107,7 +107,7 @@ def test_add_letters_to_map_punctuation(cypherletter_map):
 def test_remove_word_from_mapping(cypherletter_map):
     others: str = "EFGHIJKLMNOPQRSTUVWXYZ"
     word: str = "abcd"
-    match: str = "this"
+    match = "this"
     cypherletter_map.add_word_to_mapping(word, match)
     word = "EFG"
     match = "ONE"
@@ -128,9 +128,20 @@ def test_remove_word_from_mapping(cypherletter_map):
         assert cypherletter_map.get_letter_for_cypher(letter) is None
 
 
+def test_clear(cypherletter_map):
+    others = decryptoquote.LETTERS
+    for letter in others:
+        assert cypherletter_map.get_letter_for_cypher(letter) is None
+    cypherletter_map = word_add_case(
+        cypherletter_map, "ABCD", "THIS", others[4:])
+    cypherletter_map.clear()
+    for letter in others:
+        assert cypherletter_map.get_letter_for_cypher(letter) is None
+
+
 def test_does_word_coding_work(cypherletter_map):
     word: str = "abcd"
-    match: str = "this"
+    match = "this"
     cypherletter_map.add_word_to_mapping(word, match)
     # works
     word_coding_case(cypherletter_map, "efg", "one", True)  # all new
@@ -271,13 +282,4 @@ def test_eq(cypherletter_map,
     assert cypherletter_map == cypherletter_map3
     assert cypherletter_map != cypherletter_map2
     assert cypherletter_map != not_a_clm
-
-
-def test_deepcopy(cypherletter_map):
-    clm_deepcopy = copy.deepcopy(cypherletter_map)
-    assert cypherletter_map.get_letter_for_cypher("A") is None
-    assert clm_deepcopy.get_letter_for_cypher("A") is None
-    clm_deepcopy.add_word_to_mapping("A", "Z")
-    assert cypherletter_map.get_letter_for_cypher("A") is None
-    assert clm_deepcopy.get_letter_for_cypher("A") == "Z"
 

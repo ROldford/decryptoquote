@@ -341,6 +341,11 @@ class CypherLetterMap:
                     return False
         return True
 
+    def clear(self):
+        self._past_coded_words: List[Tuple[str, str]] = []  # coded, decoded
+        for letter in LETTERS:
+            self._clmap[letter] = None
+
     def _add_word_to_mapping_no_save(self,
                                      coded_word: str,
                                      decoded_word: str):
