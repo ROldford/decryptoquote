@@ -433,6 +433,9 @@ class Decrypter:
         f. Otherwise, return to step 2 and repeat.
 
     :param coded_text: the text to decode
+    :param cypher_letter_map: CypherLetterMap to use. This map will be cleared
+      before use.
+    :param word_patterns: WordPatterns to use.
 
     .. attribute:: cypher_letter_map
         :type: CypherLetterMap
@@ -444,16 +447,13 @@ class Decrypter:
     def __init__(
         self,
         coded_text: str,
-        pattern_file_path: str,
-        corpus_file_path: Optional[str] = None,
-        rebuild_patterns: bool = False
+        cypher_letter_map: CypherLetterMap,
+        word_patterns: WordPatterns,
     ):
-        self.cypher_letter_map = CypherLetterMap()
+        self.cypher_letter_map = cypher_letter_map
+        self.cypher_letter_map.clear()
         self._coded_words: List[str] = string_to_caps_words(coded_text)
 
-        word_patterns = WordPatterns(pattern_file_path,
-                                     corpus_file_path=corpus_file_path,
-                                     overwrite_json=rebuild_patterns)
         self._pattern_matches: List[List[str]] = []
         for coded_word in self._coded_words:
             matches = word_patterns.code_word_to_match_words(coded_word)
@@ -477,8 +477,9 @@ class Decrypter:
             if backtracking:
                 backtracking = self._bad_match_logic()
             else:
-                current_match_word: str = self._pattern_matches[
-                    self._word_index][
+                current_match_words: List[str] = self._pattern_matches[
+                    self._word_index]
+                current_match_word: str = current_match_words[
                     self._match_indices[self._word_index]]
 
                 # Check word against cl_map
@@ -589,11 +590,15 @@ def decrypt_quote(
         os.path.dirname(__file__), PATTERNS_JSON)
     corpus_file_path = os.path.join(
         os.path.dirname(__file__), CORPUS_FILE)
+    cypher_letter_map = CypherLetterMap()
+    word_patterns = WordPatterns(
+        pattern_dict_file_path,
+        overwrite_json=rebuild_patterns,
+        corpus_file_path=corpus_file_path)
     decrypter = Decrypter(
         coded_quote,
-        pattern_dict_file_path,
-        corpus_file_path=corpus_file_path,
-        rebuild_patterns=rebuild_patterns)
+        cypher_letter_map,
+        word_patterns)
     success = decrypter.decrypt()
     logging.debug(f"{success=}")
     cypher_letter_map = decrypter.cypher_letter_map
