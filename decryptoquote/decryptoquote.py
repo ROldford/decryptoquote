@@ -44,6 +44,7 @@ IN_WORD_PUNCT: str = "'-"
 NON_WORD_PUNCT: str = ".,!?;"
 PUNCTUATION: str = "{0}{1}".format(IN_WORD_PUNCT, NON_WORD_PUNCT)
 LETTERS: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+DIGITS: str = "0123456789"
 EXCEPT_MESSAGE: str = "A code letter was left with no possible solution"
 
 logging.basicConfig(
@@ -74,6 +75,8 @@ class WordPatterns:
                  saved_patterns_path: str,
                  overwrite_json: bool = False,
                  corpus_file_path: str = None) -> None:
+        self._saved_patterns_path = saved_patterns_path
+        self._corpus_file_path: Optional[str] = corpus_file_path
         if overwrite_json or not os.path.exists(saved_patterns_path):
             # we need a new patterns JSON, so get words from corpus text file
             self._patterns: Dict[str, List[str]] = {}
@@ -97,12 +100,21 @@ class WordPatterns:
                     json.dump(self._patterns, file)
             except Exception as err:
                 raise IOError(
-                    f"Patterns file not created correctly: {saved_patterns_path}"
+                    f"Patterns file not created correctly: "
+                    f"{saved_patterns_path}"
                 ) from err
         else:
             # just load patterns JSON
             with open(saved_patterns_path, "r") as file:
                 self._patterns = json.load(file)
+
+    @property
+    def saved_patterns_path(self) -> str:
+        return self._saved_patterns_path
+
+    @property
+    def corpus_file_path(self) -> Optional[str]:
+        return self._corpus_file_path
 
     @staticmethod
     def word_to_pattern(word: str) -> str:
@@ -143,9 +155,13 @@ class WordPatterns:
         database. Patterns are described in :meth:`word_to_pattern`.
 
         :param pattern: given word pattern
-        :return: words matching that pattern
+        :return: words matching that pattern, or an empty list if no matches
+          exist
         """
         if pattern not in self._patterns:
+            for character in pattern:
+                if character in DIGITS:
+                    return []
             return [pattern]
         else:
             return self._patterns[pattern]
@@ -156,15 +172,28 @@ class WordPatterns:
         and could therefore possibly be the solution for that word.
 
         :param code_word: given code word
-        :return: real words matching code word's letter pattern
+        :return: real words matching code word's letter pattern, or an empty
+          list if no matches exist
         """
         pattern: str = self.word_to_pattern(code_word)
         return self.pattern_to_match_words(pattern)
 
-    def add_words_to_saved_patterns(self, words: List[str]):
-        pass  # TODO: stub
+    def add_new_words(self, words: List[str]):
+        """
+        Adds all words in the list to the stored patterns.
 
-    def make_corpus_from_patterns(self, corpus_file_path: str) -> None:
+        :param words: words to add
+        """
+        for word in words:
+            word_upper = word.upper()
+            pattern = self.word_to_pattern(word_upper)
+            matching_words = self.pattern_to_match_words(pattern)
+
+            if word_upper not in matching_words:
+                matching_words.append(word_upper)
+                self._patterns[pattern] = matching_words
+
+    def save_corpus_from_patterns(self, corpus_file_path: str) -> None:
         pass  # TODO: stub
 
 

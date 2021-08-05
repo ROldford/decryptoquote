@@ -23,7 +23,7 @@ TEST_CORPUS = "\n".join(TEST_CORPUS_LIST)
 
 
 @pytest.fixture()
-def model(fs):
+def model(fs) -> decryptoquote.WordPatterns:
     patterns_json: str = json.dumps(TEST_PATTERNS)
     fs.create_file(PATTERNS_FILE_PATH, contents=patterns_json)
     model = decryptoquote.WordPatterns(PATTERNS_FILE_PATH)
@@ -105,4 +105,19 @@ def test_code_word_to_match_words(model):
     assert "SOME" in result2
     assert model.code_word_to_match_words("AB") == ["IS"]
     assert model.code_word_to_match_words("ABC'D") == ["ISN'T"]
+    assert model.code_word_to_match_words("ABC") == []
     assert model.code_word_to_match_words("!") == ["!"]
+    assert model.code_word_to_match_words(".") == ["."]
+
+
+def test_add_new_words(model):
+    new_words = ["NEW", "words"]
+    for new_word in new_words:
+        assert model.code_word_to_match_words(new_word) == []
+    model.add_new_words(new_words)
+    for new_word in new_words:
+        assert new_word.upper() in model.code_word_to_match_words(new_word)
+
+
+def test_save_corpus_from_patterns(model):
+    assert True
