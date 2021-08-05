@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """Integration tests for `decryptoquote` package."""
+from typing import List
 
 import pytest
 
 from decryptoquote import decryptoquote
+from tests.unit.test_unit import puzzle_works_check
 
-@pytest.mark.xfail
+
+# @pytest.mark.xfail
 class TestIntegration(object):
     CODED_QUOTE: str = "coded_quote"
     DECODED_QUOTE: str = "decoded_quote"
@@ -34,7 +37,7 @@ class TestIntegration(object):
             CODED_QUOTE: "JRR FSAAGFFZSR HGBHRG VGL JLM CBVGL JQG UDI "
                          "MQGJVGQF. EKGN DVJIDLG CKJE EKGDQ ZSESQG ABSRM UG, "
                          "DMGJR DL GYGQN QGFHGAE, JLM EKGL EKGN CBQW GYGQN "
-                         "MJN EBCJOM EKGDO MDFEJLE YDFDBL, EKJE IBJR BQ "
+                         "MJN EBCJQM EKGDQ MDFEJLE YDFDBL, EKJE IBJR BQ "
                          "HSQHBFG.",
             DECODED_QUOTE: "ALL SUCCESSFUL PEOPLE MEN AND WOMEN ARE BIG "
                            "DREAMERS. THEY IMAGINE WHAT THEIR FUTURE COULD "
@@ -44,13 +47,12 @@ class TestIntegration(object):
         },
         {
             CODED_QUOTE: "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh "
-                         "nbaae, byh tyqrvzqblyrh ge abqryzzbo zeqbyye. Osjr "
-                         "lv znr inbly cnrqrge zs glyh b inloh zs lzv "
-                         "abqryzv.",
+                         "nbaae, byh tyqrvzqblyrh ge abqryzbo zeqbyye. Osjr lv "
+                         "znr inbly cnrqrge zs glyh b inloh zs lzv abqryzv.",
             DECODED_QUOTE: "IT IS MY PLEASURE THAT MY CHILDREN ARE FREE AND "
                            "HAPPY, AND UNRESTRAINED BY PARENTAL TYRANNY. LOVE "
                            "IS THE CHAIN WHEREBY TO BIND A CHILD TO ITS "
-                           "PARENTS. "
+                           "PARENTS."
         },
     ]
 
@@ -58,5 +60,10 @@ class TestIntegration(object):
     def test_no_author(self, test_strings):
         coded_quote: str = test_strings[self.CODED_QUOTE]
         decoded_quote: str = test_strings[self.DECODED_QUOTE]
-        result = decryptoquote.decrypt_quote(coded_quote)
+        puzzle_works_check(coded_quote, decoded_quote)
+        decoded_words: List[str] = decryptoquote.string_to_caps_words(
+            decoded_quote)
+        result = decryptoquote.decrypt_quote(
+            coded_quote,
+            add_words=decoded_words)
         assert result == decoded_quote

@@ -48,8 +48,8 @@ DIGITS: str = "0123456789"
 EXCEPT_MESSAGE: str = "A code letter was left with no possible solution"
 
 logging.basicConfig(
-    # filename='decryptoquote.log',
-    # filemode='w',
+    filename='decryptoquote.log',
+    filemode='w',
     format='%(name)s - %(levelname)s - %(message)s',
     level=logging.DEBUG)
 
@@ -470,6 +470,7 @@ class Decrypter:
 
         :return: `True` if decoding was successful
         """
+        logging.debug("Starting new decryption...")
         word_count: int = len(self._coded_words)
         logging.debug(word_count)
         backtracking: bool = False
@@ -487,7 +488,7 @@ class Decrypter:
                 # if self._is_match_good(current_coded_word,
                 #                        current_match_word):
                 if self.cypher_letter_map.does_word_coding_work(
-                        current_coded_word, current_match_word):
+                    current_coded_word, current_match_word):
                     logging.debug(
                         f"Testing word {self._word_index} == "
                         f"{current_match_word}, works")
@@ -569,8 +570,9 @@ def string_to_caps_words(in_string: str) -> List[str]:
 def decrypt_quote(
     coded_quote: str,
     coded_author: str = None,
+    add_words: List[str] = None,
     show_cypher: bool = False,
-    rebuild_patterns: bool = False
+    rebuild_patterns: bool = False,
 ) -> str:
     """
     Decrypts the Cryptoquote puzzle.
@@ -579,6 +581,7 @@ def decrypt_quote(
       used in decoding, since names are not usually in the English dictionary.)
     :param coded_author: The author portion of the puzzle. (This will be
       decoded based on the results from decoding the quote.)
+    :param add_words: Words to add to the word list before decrypting
     :param show_cypher: Whether the puzzle cypher should be added to the
       decoded puzzle text.
     :param rebuild_patterns: Whether to rebuild the saved word patterns file
@@ -595,6 +598,8 @@ def decrypt_quote(
         pattern_dict_file_path,
         overwrite_json=rebuild_patterns,
         corpus_file_path=corpus_file_path)
+    if add_words:
+        word_patterns.add_new_words(add_words)
     decrypter = Decrypter(
         coded_quote,
         cypher_letter_map,
@@ -623,7 +628,17 @@ def decrypt_quote(
 if __name__ == "__main__":
     # import doctest
     # doctest.testmod()
-    quote: str = "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh nbaae, " \
-                  "byh tyqrvzqblyrh ge abqryzbo zeqbyye. Osjr lv znr inbly " \
-                  "cnrqrge zs glyh b inloh zs lzv abqryzv."
-    print(decrypt_quote(quote, show_cypher=True))
+    # quote: str = "Lz lv we aorbvtqr znbz we inlohqry bqr mqrr byh nbaae, " \
+    #               "byh tyqrvzqblyrh ge abqryzbo zeqbyye. Osjr lv znr inbly " \
+    #               "cnrqrge zs glyh b inloh zs lzv abqryzv."
+    # print(decrypt_quote(quote, show_cypher=True))
+    CODED_QUOTE = "JRR FSAAGFFZSR HGBHRG VGL JLM CBVGL JQG UDI MQGJVGQF. " \
+                  "EKGN DVJIDLG CKJE EKGDQ ZSESQG ABSRM UG, DMGJR DL GYGQN " \
+                  "QGFHGAE, JLM EKGL EKGN CBQW GYGQN MJN EBCJQM EKGDQ " \
+                  "MDFEJLE YDFDBL, EKJE IBJR BQ HSQHBFG."
+    DECODED_QUOTE = "ALL SUCCESSFUL PEOPLE MEN AND WOMEN ARE BIG DREAMERS. " \
+                    "THEY IMAGINE WHAT THEIR FUTURE COULD BE, IDEAL IN EVERY " \
+                    "RESPECT, AND THEN THEY WORK EVERY DAY TOWARD THEIR " \
+                    "DISTANT VISION, THAT GOAL OR PURPOSE."
+    decoded_words = string_to_caps_words(DECODED_QUOTE)
+    print(decrypt_quote(CODED_QUOTE, add_words=decoded_words))
