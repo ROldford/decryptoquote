@@ -7,28 +7,29 @@ from typing import List, Dict, Optional, Tuple
 
 import pytest
 
-from decryptoquote import decryptoquote
+import decryptoquote.constants
+from decryptoquote.cypherlettermap import CypherLetterMap
 
 
 @pytest.fixture()
-def cypherletter_map() -> decryptoquote.CypherLetterMap:
-    return decryptoquote.CypherLetterMap()
+def cypherletter_map() -> CypherLetterMap:
+    return CypherLetterMap()
 
 @pytest.fixture()
-def cypherletter_map2() -> decryptoquote.CypherLetterMap:
-    return decryptoquote.CypherLetterMap()
+def cypherletter_map2() -> CypherLetterMap:
+    return CypherLetterMap()
 
 @pytest.fixture()
-def cypherletter_map3() -> decryptoquote.CypherLetterMap:
-    return decryptoquote.CypherLetterMap()
+def cypherletter_map3() -> CypherLetterMap:
+    return CypherLetterMap()
 
 @pytest.fixture()
-def cypherletter_map4() -> decryptoquote.CypherLetterMap:
-    return decryptoquote.CypherLetterMap()
+def cypherletter_map4() -> CypherLetterMap:
+    return CypherLetterMap()
 
 
 def test_get_blank_cypherletter_map(cypherletter_map):
-    for letter in decryptoquote.LETTERS:
+    for letter in decryptoquote.constants.LETTERS:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
 
 
@@ -48,11 +49,11 @@ def test_add_word_to_mapping(cypherletter_map):
 
 
 def word_add_case(
-    cypherletter_map: decryptoquote.CypherLetterMap,
+    cypherletter_map: CypherLetterMap,
     word: str,
     match: str,
     others: str
-) -> decryptoquote.CypherLetterMap:
+) -> CypherLetterMap:
     cypherletter_map.add_word_to_mapping(word, match)
     for letter_pair in zip(word.upper(), match.upper()):
         coded, decoded = letter_pair
@@ -94,7 +95,7 @@ def test_add_letters_to_map_punctuation(cypherletter_map):
     word: str = "!"
     match = "!"
     cypherletter_map.add_word_to_mapping(word, match)
-    for letter in decryptoquote.LETTERS:
+    for letter in decryptoquote.constants.LETTERS:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
     word = "A'"
     match = "'B"
@@ -124,12 +125,12 @@ def test_remove_word_from_mapping(cypherletter_map):
     for letter in others[3:]:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
     cypherletter_map.remove_last_word_from_mapping()
-    for letter in decryptoquote.LETTERS:
+    for letter in decryptoquote.constants.LETTERS:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
 
 
 def test_clear(cypherletter_map):
-    others = decryptoquote.LETTERS
+    others = decryptoquote.constants.LETTERS
     for letter in others:
         assert cypherletter_map.get_letter_for_cypher(letter) is None
     cypherletter_map = word_add_case(
@@ -200,13 +201,15 @@ def test_decode_with_map(cypherletter_map,
     expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
     expected2: str = "ZYXWVUTSRQP___LKJIHGFEDCBA"
     expected3: str = "Z________________________A"
-    assert cypherletter_map.decode(decryptoquote.LETTERS) == expected1
-    assert cypherletter_map2.decode(decryptoquote.LETTERS) == expected2
-    assert cypherletter_map3.decode(decryptoquote.LETTERS) == expected3
+    assert cypherletter_map.decode(decryptoquote.constants.LETTERS) == expected1
+    assert cypherletter_map2.decode(
+        decryptoquote.constants.LETTERS) == expected2
+    assert cypherletter_map3.decode(
+        decryptoquote.constants.LETTERS) == expected3
 
 
 def test_str(cypherletter_map, cypherletter_map2, cypherletter_map3):
-    cypherletter_map.add_word_to_mapping(decryptoquote.LETTERS,
+    cypherletter_map.add_word_to_mapping(decryptoquote.constants.LETTERS,
                                             "ZYXWVUTSRQPONMLKJIHGFEDCBA")
     # map1: Dict[str, Optional[List[str]]] = {
     #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],
@@ -227,13 +230,13 @@ def test_str(cypherletter_map, cypherletter_map2, cypherletter_map3):
     expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
     expected3: str = "Z________________________A"
     assert str(cypherletter_map) \
-           == "Decoder:\n{0}\n{1}".format(decryptoquote.LETTERS, expected1)
+           == "Decoder:\n{0}\n{1}".format(decryptoquote.constants.LETTERS, expected1)
     assert str(cypherletter_map3) \
-           == "Decoder:\n{0}\n{1}".format(decryptoquote.LETTERS, expected3)
+           == "Decoder:\n{0}\n{1}".format(decryptoquote.constants.LETTERS, expected3)
 
 
 def test_repr(cypherletter_map, cypherletter_map2, cypherletter_map3):
-    cypherletter_map.add_word_to_mapping(decryptoquote.LETTERS,
+    cypherletter_map.add_word_to_mapping(decryptoquote.constants.LETTERS,
                                             "ZYXWVUTSRQPONMLKJIHGFEDCBA")
     # map1: Dict[str, Optional[List[str]]] = {
     #     'A': ["Z"], 'B': ["Y"], 'C': ["X"], 'D': ["W"], 'E': ["V"],

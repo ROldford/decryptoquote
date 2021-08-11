@@ -8,7 +8,8 @@ import os
 import pytest
 import pyfakefs
 
-from decryptoquote import decryptoquote
+import decryptoquote.wordpatterns
+from decryptoquote.wordpatterns import WordPatterns
 
 CORPUS_FILE_PATH = '/test.txt'
 PATTERNS_FILE_PATH = '/test_patterns.json'
@@ -23,10 +24,10 @@ TEST_CORPUS = "\n".join(TEST_CORPUS_LIST)
 
 
 @pytest.fixture()
-def model(fs) -> decryptoquote.WordPatterns:
+def model(fs) -> WordPatterns:
     patterns_json: str = json.dumps(TEST_PATTERNS)
     fs.create_file(PATTERNS_FILE_PATH, contents=patterns_json)
-    model = decryptoquote.WordPatterns(PATTERNS_FILE_PATH)
+    model = WordPatterns(PATTERNS_FILE_PATH)
     return model
 
 
@@ -40,9 +41,9 @@ def model(fs) -> decryptoquote.WordPatterns:
 def test_init_overwrite_json(fs):
     fs.create_file(CORPUS_FILE_PATH, contents=TEST_CORPUS)
     fs.create_file(PATTERNS_FILE_PATH)
-    decryptoquote.WordPatterns(PATTERNS_FILE_PATH,
-                               True,
-                               CORPUS_FILE_PATH)
+    WordPatterns(PATTERNS_FILE_PATH,
+                                            True,
+                                            CORPUS_FILE_PATH)
     assert os.path.exists(PATTERNS_FILE_PATH)
     with open(PATTERNS_FILE_PATH, "r") as file:
         json_string = file.read().replace('\n', '')
@@ -53,8 +54,8 @@ def test_init_overwrite_json(fs):
 def test_init_json_file_invalid(fs):
     bad_file_path = '/bad.txt'
     fs.create_file(CORPUS_FILE_PATH, contents=TEST_CORPUS)
-    decryptoquote.WordPatterns(bad_file_path,
-                               corpus_file_path=CORPUS_FILE_PATH)
+    WordPatterns(bad_file_path,
+                                            corpus_file_path=CORPUS_FILE_PATH)
     with open(bad_file_path, "r") as file:
         json_string = file.read().replace('\n', '')
         parsed_json = json.loads(json_string)
@@ -67,7 +68,7 @@ def test_missing_corpus_file(fs):
         bad_file_path
     )
     with pytest.raises(IOError) as e:
-        decryptoquote.WordPatterns(PATTERNS_FILE_PATH, True, bad_file_path)
+        WordPatterns(PATTERNS_FILE_PATH, True, bad_file_path)
     assert str(e.value) == expected_error_message
 
 
