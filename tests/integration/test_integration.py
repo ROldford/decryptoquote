@@ -6,7 +6,8 @@ from typing import List
 
 import pytest
 
-from decryptoquote import decryptoquote
+from decryptoquote.decryptoquote import decrypt_quote
+from decryptoquote.helpers import string_to_caps_words
 from tests.unit.test_unit import puzzle_works_check
 
 
@@ -61,9 +62,9 @@ class TestIntegration(object):
         coded_quote: str = test_strings[self.CODED_QUOTE]
         decoded_quote: str = test_strings[self.DECODED_QUOTE]
         puzzle_works_check(coded_quote, decoded_quote)
-        decoded_words: List[str] = decryptoquote.string_to_caps_words(
+        decoded_words: List[str] = string_to_caps_words(
             decoded_quote)
-        result = decryptoquote.decrypt_quote(
+        result = decrypt_quote(
             coded_quote,
             add_words=decoded_words)
         assert result == decoded_quote

@@ -5,11 +5,14 @@
 from typing import List, Tuple
 
 import pytest
-from decryptoquote import decryptoquote
+
+from decryptoquote.cypherlettermap import CypherLetterMap
+from decryptoquote.helpers import string_to_caps_words
+from decryptoquote.decryptoquote import decrypt_quote
 
 
 def test_string_to_caps_words():
-    assert decryptoquote.string_to_caps_words("Svool, R'n z hgirmt!") == \
+    assert string_to_caps_words("Svool, R'n z hgirmt!") == \
            ['SVOOL', ',', "R'N", 'Z', 'HGIRMT', '!']
 
 
@@ -36,12 +39,12 @@ def test_decrypt_quote():
 
 
 def puzzle_works_check(coded_quote, decoded_quote):
-    coded_words = decryptoquote.string_to_caps_words(coded_quote)
-    decoded_words = decryptoquote.string_to_caps_words(decoded_quote)
+    coded_words = string_to_caps_words(coded_quote)
+    decoded_words = string_to_caps_words(decoded_quote)
 
     assert len(coded_words) == len(decoded_words)
     words = zip(coded_words, decoded_words)
-    cypher_letter_map = decryptoquote.CypherLetterMap()
+    cypher_letter_map = CypherLetterMap()
     for word_pair in words:
         coded_word, decoded_word = word_pair
         cypher_letter_map.add_word_to_mapping(coded_word, decoded_word)
@@ -51,14 +54,14 @@ def puzzle_works_check(coded_quote, decoded_quote):
 
 def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
     puzzle_works_check(coded_quote, decoded_quote)
-    author_result: str = decryptoquote.decrypt_quote(
+    author_result: str = decrypt_quote(
         coded_quote,
         coded_author,
         rebuild_patterns=True)
-    no_author_result: str = decryptoquote.decrypt_quote(
+    no_author_result: str = decrypt_quote(
         coded_quote,
         rebuild_patterns=True)
-    # author_result_with_cypher: str = decryptoquote.decrypt_quote(
+    # author_result_with_cypher: str = decrypt_quote(
     #     coded_quote,
     #     show_cypher=True,
     #     rebuild_patterns=True)

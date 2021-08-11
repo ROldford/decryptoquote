@@ -6,10 +6,9 @@ import pytest
 import pyfakefs
 import json
 
-from decryptoquote.decryptoquote import (
-    Decrypter,
-    CypherLetterMap,
-    WordPatterns)
+from decryptoquote.decrypter import Decrypter
+from decryptoquote.cypherlettermap import CypherLetterMap
+from decryptoquote.wordpatterns import WordPatterns
 
 CORPUS_FILE_PATH = '/test.txt'
 PATTERNS_FILE_PATH = '/test_patterns.json'
