@@ -7,8 +7,8 @@ import os
 
 import pytest
 import pyfakefs
+import mongomock
 
-import decryptoquote.wordpatterns
 from decryptoquote.wordpatterns import WordPatterns
 
 CORPUS_FILE_PATH = '/test.txt'
@@ -24,10 +24,23 @@ TEST_CORPUS = "\n".join(TEST_CORPUS_LIST)
 
 
 @pytest.fixture()
-def model(fs) -> WordPatterns:
-    patterns_json: str = json.dumps(TEST_PATTERNS)
-    fs.create_file(PATTERNS_FILE_PATH, contents=patterns_json)
-    model = WordPatterns(PATTERNS_FILE_PATH)
+def collection() -> mongomock.Collection:
+    collection: mongomock.Collection = mongomock.MongoClient().db.collection
+    documents = []
+    for pattern, words in TEST_PATTERNS.items():
+        for word in words:
+            documents.append({WordPatterns.WORD_KEY: word,
+                              WordPatterns.PATTERN_KEY: pattern})
+    collection.insert_many(documents)
+    return collection
+
+@pytest.fixture()
+def model(collection) -> WordPatterns:
+
+    # patterns_json: str = json.dumps(TEST_PATTERNS)
+    # fs.create_file(PATTERNS_FILE_PATH, contents=patterns_json)
+    # model = WordPatterns(PATTERNS_FILE_PATH)
+    model = WordPatterns(collection)
     return model
 
 
@@ -38,37 +51,22 @@ def model(fs) -> WordPatterns:
 # - otherwise - pull from json (as in fixture)
 
 
-def test_init_overwrite_json(fs):
+def test_init_overwrite_patterns(fs, collection):
+    # smoke test: see if this works without exception thrown
     fs.create_file(CORPUS_FILE_PATH, contents=TEST_CORPUS)
-    fs.create_file(PATTERNS_FILE_PATH)
-    WordPatterns(PATTERNS_FILE_PATH,
-                                            True,
-                                            CORPUS_FILE_PATH)
-    assert os.path.exists(PATTERNS_FILE_PATH)
-    with open(PATTERNS_FILE_PATH, "r") as file:
-        json_string = file.read().replace('\n', '')
-        parsed_json = json.loads(json_string)
-        assert parsed_json == TEST_PATTERNS
+    WordPatterns(collection,
+                 True,
+                 CORPUS_FILE_PATH)
 
 
-def test_init_json_file_invalid(fs):
+def test_missing_corpus_file(fs, collection):
     bad_file_path = '/bad.txt'
-    fs.create_file(CORPUS_FILE_PATH, contents=TEST_CORPUS)
-    WordPatterns(bad_file_path,
-                                            corpus_file_path=CORPUS_FILE_PATH)
-    with open(bad_file_path, "r") as file:
-        json_string = file.read().replace('\n', '')
-        parsed_json = json.loads(json_string)
-        assert parsed_json == TEST_PATTERNS
-
-
-def test_missing_corpus_file(fs):
-    bad_file_path = '/bad.txt'
-    expected_error_message: str = "Language model file not valid: {0}".format(
-        bad_file_path
-    )
-    with pytest.raises(IOError) as e:
-        WordPatterns(PATTERNS_FILE_PATH, True, bad_file_path)
+    with pytest.raises(OSError) as e:
+        WordPatterns(collection, True, bad_file_path)
+    assert "No such file" in str(e.value)
+    expected_error_message: str = "No valid language file given"
+    with pytest.raises(ValueError) as e:
+        WordPatterns(collection, True)
     assert str(e.value) == expected_error_message
 
 

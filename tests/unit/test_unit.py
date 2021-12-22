@@ -5,10 +5,12 @@
 from typing import List, Tuple
 
 import pytest
+import mongomock
 
 from decryptoquote.cypherlettermap import CypherLetterMap
 from decryptoquote.helpers import string_to_caps_words
-from decryptoquote.decryptoquote import decrypt_quote
+from decryptoquote.decryptoquote import (decrypt_quote_fully,
+                                         MONGO_HOST, MONGO_PORT)
 
 
 def test_string_to_caps_words():
@@ -52,23 +54,21 @@ def puzzle_works_check(coded_quote, decoded_quote):
     assert actual_decoded_quote == decoded_quote.upper()
 
 
+@mongomock.patch(servers=((MONGO_HOST, MONGO_PORT),))
 def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
     puzzle_works_check(coded_quote, decoded_quote)
-    author_result: str = decrypt_quote(
+    author_results: List[str] = decrypt_quote_fully(
         coded_quote,
         coded_author,
         rebuild_patterns=True)
-    no_author_result: str = decrypt_quote(
+    no_author_results: List[str] = decrypt_quote_fully(
         coded_quote,
         rebuild_patterns=True)
-    # author_result_with_cypher: str = decrypt_quote(
-    #     coded_quote,
-    #     show_cypher=True,
-    #     rebuild_patterns=True)
-    # print(author_result_with_cypher)
-    # print(author_result)
-    assert no_author_result == decoded_quote
-    actual_author = author_result.split("\n")[1]
-    for letter_pair in zip(decoded_author, actual_author):
-        expected_letter, actual_letter = letter_pair
-        assert (expected_letter == actual_letter or actual_letter == '_')
+    assert decoded_quote in no_author_results
+    for result in author_results:
+        actual_quote, actual_author = result.split("\n")
+        if actual_quote == decoded_quote:
+            for letter_pair in zip(decoded_author, actual_author):
+                expected_letter, actual_letter = letter_pair
+                assert (
+                    expected_letter == actual_letter or actual_letter == "_")

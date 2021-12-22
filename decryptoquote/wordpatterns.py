@@ -1,8 +1,9 @@
-import json
-import os
-from typing import Optional, Dict, List
+from typing import TYPE_CHECKING, Optional, Dict, List, Set
 
 from decryptoquote.constants import PUNCTUATION
+
+if TYPE_CHECKING:
+    from pymongo.collection import Collection
 
 
 class WordPatterns:
@@ -14,56 +15,47 @@ class WordPatterns:
     decoded words will have the same pattern. This can be used to determine
     which words are possible matches.
 
-    :param saved_patterns_path: path to saved pattern file
-    :param overwrite_json: if `True`, overwrites any existing saved patterns
+    :param db_collection: MongoDB collection for language model. Documents in
+      this collection should follow the pattern
+      ```{self.WORD_KEY: [word], self.PATTERN_KEY: [pattern]}```, with no
+      duplicate words
+    :param overwrite_patterns: if `True`, overwrites any existing saved patterns
       file
     :param corpus_file_path: path to language corpus file. This is required to
       make a new saved patterns file
-    :exception IOError if corpus file is invalid
+    :exception OSError if corpus file is invalid
     """
 
     DIGITS: str = "0123456789"
+    WORD_KEY: str = 'word'
+    PATTERN_KEY: str = 'pattern'
 
     def __init__(self,
-                 saved_patterns_path: str,
-                 overwrite_json: bool = False,
+                 db_collection: 'Collection',
+                 overwrite_patterns: bool = False,
                  corpus_file_path: str = None) -> None:
-        self._saved_patterns_path = saved_patterns_path
+        self._db_collection = db_collection
+        self._db_collection.create_index(self.WORD_KEY, unique=True)
         self._corpus_file_path: Optional[str] = corpus_file_path
-        if overwrite_json or not os.path.exists(saved_patterns_path):
-            # we need a new patterns JSON, so get words from corpus text file
-            self._patterns: Dict[str, List[str]] = {}
-            try:
-                with open(corpus_file_path, 'r') as file:
-                    word_list: List[str] = [
-                        s.upper() for s in file.read().splitlines()
-                    ]
-                    for word in word_list:
-                        pattern: str = self.word_to_pattern(word)
-                        if pattern not in self._patterns:
-                            self._patterns[pattern] = [word]
-                        else:
-                            self._patterns[pattern].append(word)
-            except Exception as err:
-                raise IOError(
-                    f"Language model file not valid: {corpus_file_path}"
-                ) from err
-            try:
-                with open(saved_patterns_path, "w") as file:
-                    json.dump(self._patterns, file)
-            except Exception as err:
-                raise IOError(
-                    f"Patterns file not created correctly: "
-                    f"{saved_patterns_path}"
-                ) from err
-        else:
-            # just load patterns JSON
-            with open(saved_patterns_path, "r") as file:
-                self._patterns = json.load(file)
+        if overwrite_patterns:
+            if corpus_file_path is None:
+                raise ValueError('No valid language file given')
+            self._db_collection.delete_many({})
 
-    @property
-    def saved_patterns_path(self) -> str:
-        return self._saved_patterns_path
+            # get words from corpus text file
+            with open(corpus_file_path, 'r') as file:
+                word_list: List[str] = [
+                    s.upper() for s in file.read().splitlines()
+                ]
+                word_set: Set[str] = set(word_list)
+                insert_list: List[str] = []
+                for word in word_set:
+                    pattern: str = self.word_to_pattern(word)
+                    # insert_set.add({self.WORD_KEY: word,
+                    #                 self.PATTERN_KEY: pattern})
+                    insert_list.append({self.WORD_KEY: word,
+                                        self.PATTERN_KEY: pattern})
+                x = self._db_collection.insert_many(insert_list)
 
     @property
     def corpus_file_path(self) -> Optional[str]:
@@ -111,13 +103,18 @@ class WordPatterns:
         :return: words matching that pattern, or an empty list if no matches
           exist
         """
-        if pattern not in self._patterns:
+        query = {self.PATTERN_KEY: pattern}
+
+        query_count = self._db_collection.count_documents(query)
+        if query_count < 1:
             for character in pattern:
                 if character in self.DIGITS:
                     return []
             return [pattern]
         else:
-            return self._patterns[pattern]
+            query_results = self._db_collection.find(query)
+            results_list = [x[self.WORD_KEY] for x in query_results]
+            return results_list
 
     def code_word_to_match_words(self, code_word: str) -> List[str]:
         """
@@ -143,8 +140,8 @@ class WordPatterns:
             matching_words = self.pattern_to_match_words(pattern)
 
             if word_upper not in matching_words:
-                matching_words.append(word_upper)
-                self._patterns[pattern] = matching_words
+                self._db_collection.insert_one({self.WORD_KEY: word_upper,
+                                                self.PATTERN_KEY: pattern})
 
     def save_corpus_from_patterns(self, corpus_file_path: str) -> None:
         pass  # TODO: stub
