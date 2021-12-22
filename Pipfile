@@ -21,3 +21,4 @@ decryptoquote = {path = ".",editable = true}
 pyenchant = "*"
 wheel = "==0.34.2"
 pymongo = "*"
+mongomock = "*"
