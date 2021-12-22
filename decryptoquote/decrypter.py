@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import List
 
@@ -76,7 +77,7 @@ class Decrypter:
         self._word_index = 0
         self._match_indices = [0 for _ in self._coded_words]
 
-    def decrypt(self) -> bool:
+    def decrypt(self, continue_decrypting: bool = False) -> bool:
         """
         Decodes the cypher, returning a success value.
 
@@ -88,6 +89,9 @@ class Decrypter:
         word_count: int = len(self._coded_words)
         logging.debug(word_count)
         backtracking: bool = False
+        if continue_decrypting:
+            logging.debug("Continuing after last solve")
+            backtracking = self._bad_match_logic()
         while 0 <= self._word_index < word_count:
             if backtracking:
                 backtracking = self._bad_match_logic()
@@ -97,10 +101,7 @@ class Decrypter:
                 current_match_word: str = current_match_words[
                     self._match_indices[self._word_index]]
 
-                # Check word against cl_map
                 current_coded_word: str = self._coded_words[self._word_index]
-                # if self._is_match_good(current_coded_word,
-                #                        current_match_word):
                 if self.cypher_letter_map.does_word_coding_work(
                     current_coded_word, current_match_word):
                     logging.debug(
@@ -116,16 +117,32 @@ class Decrypter:
 
         if self._word_index < 0:
             logging.debug("decrypt failed")
-            return False  # 6d: No decoded text could be found
+            return False
         logging.debug("decrypt succeeded")
-        return True  # 4c: decrypting was successful
+        return True
+
+    def decrypt_all(self) -> List[CypherLetterMap]:
+        """
+        Finds all valid solutions for the cypher.
+
+        :return: list of cypher-letter maps for all valid solutions.
+        """
+        logging.debug("Starting new full decryption...")
+        solutions: List[CypherLetterMap] = []
+        keep_going = self.decrypt()
+        while keep_going:
+            solution_map = copy.deepcopy(self.cypher_letter_map)
+            solutions.append(solution_map)
+            self.cypher_letter_map.remove_last_word_from_mapping()
+            self._word_index -= 1
+            keep_going = self.decrypt(continue_decrypting=True)
+        return solutions
 
     def _is_match_good(
         self,
         current_coded_word: str,
         current_match_word: str
     ) -> bool:
-        # Select the "match word" :math:`j_x` for word :math:`i`
         current_best_decode: str = \
             self.cypher_letter_map.decode(current_coded_word)
         for letter_pair in zip(current_best_decode, current_match_word):
@@ -151,12 +168,6 @@ class Decrypter:
         self._match_indices[self._word_index] += 1
         match_count: int = len(self._pattern_matches[self._word_index])
         if self._match_indices[self._word_index] >= match_count:
-            # a. Remove the match word from the cypher-letter map
-            #         b. Set :math:`j_i` to 0
-            #         c. Decrement :math:`i`
-            # Repeat "bad match" steps with new :math:`i`
-            #         d. If :math:`i` < 0, no decoded text can be found; return `False`.
-            #         e. Otherwise, return to step 2 and repeat.
             self.cypher_letter_map.remove_last_word_from_mapping()
             self._match_indices[self._word_index] = 0
             self._word_index -= 1

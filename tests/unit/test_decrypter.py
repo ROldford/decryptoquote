@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """Unit tests for Decrypter in `decryptoquote` package."""
+from typing import List, Dict
+
 import pytest
-import pyfakefs
 import mongomock
-import json
 
 from decryptoquote.decrypter import Decrypter
 from decryptoquote.cypherlettermap import CypherLetterMap
@@ -66,13 +66,15 @@ def test_decrypt(collection):
     decrypt_case(collection, coded_quote, decoded_quote)
 
 
-def setup_patterns_file(fs):
-    patterns_json: str = json.dumps(TEST_PATTERNS)
-    try:
-        fs.create_file(PATTERNS_FILE_PATH, contents=patterns_json)
-    except FileExistsError:
-        with open(PATTERNS_FILE_PATH, 'w') as patterns_file:
-            patterns_file.write(patterns_json)
+def test_decrypt_all(collection2):
+    decoded_quote: str = "THIS IS SOME TEXT"
+    alternate_decode: str = "THIS IS SOME TENT"
+    coded_quote: str = "ABCD CD DEFG AGHA"
+    decrypter: Decrypter = build_decrypter(collection2, coded_quote)
+    solution_maps: List[CypherLetterMap] = decrypter.decrypt_all()
+    solutions = [x.decode(coded_quote) for x in solution_maps]
+    assert decoded_quote in solutions
+    assert alternate_decode in solutions
 
 
 def decrypt_case(collection, coded_quote: str, expected_decode: str):

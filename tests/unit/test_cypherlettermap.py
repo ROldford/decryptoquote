@@ -286,3 +286,8 @@ def test_eq(cypherletter_map,
     assert cypherletter_map != cypherletter_map2
     assert cypherletter_map != not_a_clm
 
+
+def test_deepcopy(cypherletter_map):
+    cypherletter_map2 = copy.deepcopy(cypherletter_map)
+    cypherletter_map.add_word_to_mapping("ABCDEF", "CHANGE")
+    assert cypherletter_map != cypherletter_map2
