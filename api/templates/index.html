@@ -7,17 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
-    <p style="text-align: center">
-        Decryptoquote
-<!--        <br />-->
-<!--        {{value}}-->
-<!--        <br />-->
-<!--        {% for message in message_list %}-->
-<!--            {% if loop.index != 2 %}-->
-<!--                {{loop.index}}: {{message}} <br />-->
-<!--            {% endif %}-->
-<!--        {% endfor %}-->
-    </p>
+    <div class="card mb-3">
+            <h1 style="text-align: center">Decryptoquote</h1>
+    </div>
     {% if solutions and solutions|length > 0 %}
         <ul>
         {% for solution in solutions %}
