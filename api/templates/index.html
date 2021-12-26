@@ -11,24 +11,26 @@
             <h1 style="text-align: center">Decryptoquote</h1>
     </div>
     {% if solutions and solutions|length > 0 %}
-        <ul>
+    <div>
+        <h2 style="text-align: center">Solutions</h2>
+        <ul class="list-group container-sm">
         {% for solution in solutions %}
-            <li>Solution {{loop.index}}</li>
-            <ul>
-                <li>{{solution.decoded_quote}}</li>
+            <li class="list-group-item">
+                <h6>Solution {{loop.index}}</h6>
+                <p>{{solution.decoded_quote}}</p>
                 {% if solution.decoded_author %}
-                    <li>{{solution.decoded_author}}</li>
+                    <p>{{solution.decoded_author}}</p>
                 {% endif %}
                 {% if solution.coding_key %}
-                <li>Key:</li>
-                <ul style="font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace">
-                    <li>ABCDEFGHIJKLMNOPQRSTUVWXYZ</li>
-                    <li>{{solution.coding_key}}</li>
-                </ul>
+                <p style="font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace">
+                    ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+                    {{solution.coding_key}}
+                </p>
                 {% endif %}
-            </ul>
+            </li>
         {% endfor %}
         </ul>
+    </div>
     {% endif %}
     <div class="card container-sm mt-3">
         <h2 style="text-align: center">Enter Your Cryptoquote</h2>
