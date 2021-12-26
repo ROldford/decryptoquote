@@ -67,4 +67,4 @@ class TestIntegration(object):
         result = decrypt_quote(
             coded_quote,
             add_words=decoded_words)
-        assert result == decoded_quote
+        assert result[0].get('decoded_quote') == decoded_quote

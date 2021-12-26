@@ -5,7 +5,7 @@ Main module.
 """
 import os
 import logging
-from typing import List
+from typing import List, Dict
 import pymongo
 
 from decryptoquote.cypherlettermap import CypherLetterMap
@@ -32,7 +32,7 @@ def decrypt_quote_fully(
     add_words: List[str] = None,
     show_cypher: bool = False,
     rebuild_patterns: bool = False,
-) -> List[str]:
+) -> List[Dict[str, str]]:
     """
     Decrypts the Cryptoquote puzzle, finding all valid solutions.
 
@@ -46,7 +46,14 @@ def decrypt_quote_fully(
     :param rebuild_patterns: Whether to rebuild the saved word patterns file
       from the text corpus file
     :return: list of all valid puzzle solutions,
-      or a blank list if no solutions could be found
+      or an empty list if no solution is found.
+      Solutions use the following schema:
+
+      {
+        decoded_quote: [decoded quote],
+        decoded_author: [decoded author, or None if no coded author given],
+        coding_key: [solution's coding key]
+      }
     """
     decrypter = _setup_decryption(add_words, coded_quote, rebuild_patterns)
     solution_maps = decrypter.decrypt_all()
@@ -54,11 +61,16 @@ def decrypt_quote_fully(
     for s_map in solution_maps:
         decoded_quote = s_map.decode(coded_quote)
         logging.debug(f"{decoded_quote=}")
-        decoded_author = f"\n{s_map.decode(coded_author)}" \
+        decoded_author = s_map.decode(coded_author) \
             if coded_author is not None \
             else ""
-        cl_map_string = f"\n{str(s_map)}" if show_cypher else ""
-        solutions.append(f"{decoded_quote}{decoded_author}{cl_map_string}")
+        keystring = s_map.keystring() if show_cypher else None
+        solution = {
+            'decoded_quote': decoded_quote,
+            'decoded_author': decoded_author,
+            'coding_key': keystring
+        }
+        solutions.append(solution)
     return solutions
 
 
@@ -68,7 +80,7 @@ def decrypt_quote(
     add_words: List[str] = None,
     show_cypher: bool = False,
     rebuild_patterns: bool = False,
-) -> str:
+) -> List[Dict[str, str]]:
     """
     Decrypts the Cryptoquote puzzle, stopping at the first valid solution.
 
@@ -81,24 +93,35 @@ def decrypt_quote(
       decoded puzzle text.
     :param rebuild_patterns: Whether to rebuild the saved word patterns file
       from the text corpus file
-    :return: decoded puzzle text. If decoding was not successful,
-      returns a blank string.
+    :return: single element list containing the first valid solution,
+      or an empty list if no solution is found.
+      Solutions use the following schema:
+
+      {
+        decoded_quote: [decoded quote],
+        decoded_author: [decoded author, or None if no coded author given],
+        coding_key: [solution's coding key]
+      }
     """
     decrypter = _setup_decryption(add_words, coded_quote, rebuild_patterns)
     success = decrypter.decrypt()
     logging.debug(f"{success=}")
     cypher_letter_map = decrypter.cypher_letter_map
+    cl_map_string = cypher_letter_map.keystring() if show_cypher else None
     if success:
         decoded_quote = cypher_letter_map.decode(coded_quote)
         logging.debug(f"{decoded_quote=}")
-        decoded_author = f"\n{cypher_letter_map.decode(coded_author)}" \
+        decoded_author = cypher_letter_map.decode(coded_author) \
             if coded_author is not None \
-            else ""
+            else None
+        solution = {
+            'decoded_quote': decoded_quote,
+            'decoded_author': decoded_author,
+            'coding_key': cl_map_string
+        }
+        return [solution]
     else:
-        decoded_quote = ""
-        decoded_author = ""
-    cl_map_string = f"\n{str(cypher_letter_map)}" if show_cypher else ""
-    return f"{decoded_quote}{decoded_author}{cl_map_string}"
+        return []
 
 
 def _setup_decryption(add_words, coded_quote, rebuild_patterns):

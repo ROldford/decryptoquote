@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Unit tests for `decryptoquote` package."""
-from typing import List, Tuple
+from typing import List, Dict
 
 import pytest
 import mongomock
@@ -57,16 +57,18 @@ def puzzle_works_check(coded_quote, decoded_quote):
 @mongomock.patch(servers=((MONGO_HOST, MONGO_PORT),))
 def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
     puzzle_works_check(coded_quote, decoded_quote)
-    author_results: List[str] = decrypt_quote_fully(
+    author_results: List[Dict[str, str]] = decrypt_quote_fully(
         coded_quote,
         coded_author,
         rebuild_patterns=True)
-    no_author_results: List[str] = decrypt_quote_fully(
+    no_author_results: List[Dict[str, str]] = decrypt_quote_fully(
         coded_quote,
         rebuild_patterns=True)
-    assert decoded_quote in no_author_results
+    no_author_quotes = [x.get('decoded_quote') for x in no_author_results]
+    assert decoded_quote in no_author_quotes
     for result in author_results:
-        actual_quote, actual_author = result.split("\n")
+        actual_quote = result.get('decoded_quote')
+        actual_author = result.get('decoded_author')
         if actual_quote == decoded_quote:
             for letter_pair in zip(decoded_author, actual_author):
                 expected_letter, actual_letter = letter_pair
