@@ -20,13 +20,8 @@ class CypherLetterMap:
                 f'{self._clmap!r})')
 
     def __str__(self):
-        key: List[str] = []
-        for letter in LETTERS:
-            if self._clmap[letter] is None:
-                key.append("_")
-            else:
-                key.append(self._clmap[letter])
-        return f"Decoder:\n{LETTERS}\n{''.join(key)}"
+        keystring: str = self.keystring()
+        return f"Decoder:\n{LETTERS}\n{keystring}"
 
     def __eq__(self, other):
         try:
@@ -151,6 +146,15 @@ class CypherLetterMap:
         self._past_coded_words: List[Tuple[str, str]] = []  # coded, decoded
         for letter in LETTERS:
             self._clmap[letter] = None
+
+    def keystring(self):
+        key: List[str] = []
+        for letter in LETTERS:
+            if self._clmap[letter] is None:
+                key.append("_")
+            else:
+                key.append(self._clmap[letter])
+        return ''.join(key)
 
     def _add_word_to_mapping_no_save(self,
                                      coded_word: str,
