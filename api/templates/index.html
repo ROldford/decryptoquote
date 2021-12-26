@@ -30,17 +30,30 @@
         {% endfor %}
         </ul>
     {% endif %}
-    <form action="/" method="post">
-        <label for="coded-quote">Coded quote:</label>
-        <input type="text" id="coded-quote" name="coded-quote">
-        <label for="coded-author">Coded author:</label>
-        <input type="text" id="coded-author" name="coded-author">
-        <label for="full-solve">Find all solutions?</label>
-        <input type="checkbox" id="full-solve" name="full-solve">
-        <label for="show-cypher">Show coding key?</label>
-        <input type="checkbox" id="show-cypher" name="show-cypher">
-        <input type="submit" value="Solve!">
-    </form>
+    <div class="card container-sm mt-3">
+        <h2 style="text-align: center">Enter Your Cryptoquote</h2>
+        <form action="/" method="post">
+            <div class="my-1">
+                <label for="coded-quote" class="form-label">Coded quote:</label>
+                <textarea class="form-control" id="coded-quote" name="coded-quote" rows="3"></textarea>
+            </div>
+            <div class="my-1">
+                <label for="coded-author" class="form-label">Coded author:</label>
+                <input type="text" class="form-control" id="coded-author" name="coded-author">
+            </div>
+            <div class="d-flex justify-content-between align-items-center my-2">
+                <div>
+                    <label for="full-solve" class="form-check-label">Find all solutions?</label>
+                    <input type="checkbox" class="form-check-input" id="full-solve" name="full-solve">
+                    <label for="show-cypher" class="form-check-label">Show coding key?</label>
+                    <input type="checkbox" class="form-check-input" id="show-cypher" name="show-cypher">
+                </div>
+                <div>
+                    <input type="submit" value="Solve!">
+                </div>
+            </div>
+        </form>
+    </div>
     {% if bad_request %}
         <p style="text-decoration-color: red">
             Something went wrong with the form!
