@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Decryptoquote - Cryptoquote Solver</title>
+</head>
+<body>
+    <p style="text-align: center">
+        Decryptoquote
+<!--        <br />-->
+<!--        {{value}}-->
+<!--        <br />-->
+<!--        {% for message in message_list %}-->
+<!--            {% if loop.index != 2 %}-->
+<!--                {{loop.index}}: {{message}} <br />-->
+<!--            {% endif %}-->
+<!--        {% endfor %}-->
+    </p>
+    {% if solutions and solutions|length > 0 %}
+        <ul>
+        {% for solution in solutions %}
+            <li>Solution {{loop.index}}</li>
+            <ul>
+                <li>{{solution.decoded_quote}}</li>
+                {% if solution.decoded_author %}
+                    <li>{{solution.decoded_author}}</li>
+                {% endif %}
+                {% if solution.coding_key %}
+                <li>Key:</li>
+                <ul style="font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace">
+                    <li>ABCDEFGHIJKLMNOPQRSTUVWXYZ</li>
+                    <li>{{solution.coding_key}}</li>
+                </ul>
+                {% endif %}
+            </ul>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    <form action="/" method="post">
+        <label for="coded-quote">Coded quote:</label>
+        <input type="text" id="coded-quote" name="coded-quote">
+        <label for="coded-author">Coded author:</label>
+        <input type="text" id="coded-author" name="coded-author">
+        <label for="full-solve">Find all solutions?</label>
+        <input type="checkbox" id="full-solve" name="full-solve">
+        <label for="show-cypher">Show coding key?</label>
+        <input type="checkbox" id="show-cypher" name="show-cypher">
+        <input type="submit" value="Solve!">
+    </form>
+    {% if bad_request %}
+        <p style="text-decoration-color: red">
+            Something went wrong with the form!
+        </p>
+    {% endif %}
+</body>
+</html>
