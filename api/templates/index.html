@@ -13,20 +13,23 @@
     {% if solutions and solutions|length > 0 %}
     <div>
         <h2 style="text-align: center">Solutions</h2>
-        <ul class="list-group container-sm">
+        <ul class="list-group-numbered container-sm">
         {% for solution in solutions %}
-            <li class="list-group-item">
-                <h6>Solution {{loop.index}}</h6>
-                <p>{{solution.decoded_quote}}</p>
-                {% if solution.decoded_author %}
-                    <p>{{solution.decoded_author}}</p>
-                {% endif %}
-                {% if solution.coding_key %}
-                <p style="font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace">
-                    ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
-                    {{solution.coding_key}}
-                </p>
-                {% endif %}
+            <li class="list-group-item d-flex justify-content-start align-items-start">
+<!--                <h6>Solution {{loop.index}}</h6>-->
+                <div class="ms-2 me-auto">
+                    <p>{{solution.decoded_quote}}</p>
+                    {% if solution.decoded_author %}
+                        <p>- {{solution.decoded_author}}</p>
+                    {% endif %}
+                    {% if solution.coding_key %}
+                    <p class="fw-bold mb-0">Key:</p>
+                    <p class="font-monospace">
+                        ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+                        {{solution.coding_key}}
+                    </p>
+                    {% endif %}
+                </div>
             </li>
         {% endfor %}
         </ul>
@@ -36,11 +39,12 @@
         <h2 style="text-align: center">Enter Your Cryptoquote</h2>
         <form action="/" method="post">
             <div class="my-1">
-                <label for="coded-quote" class="form-label">Coded quote:</label>
-                <textarea class="form-control" id="coded-quote" name="coded-quote" rows="3"></textarea>
+                <label for="coded-quote" class="form-label">Coded quote</label>
+                <span id="coded-quote-required text-secondary" class="form-text">Required</span>
+                <textarea class="form-control" id="coded-quote" name="coded-quote" rows="3" aria-describedby="coded-quote-required"></textarea>
             </div>
             <div class="my-1">
-                <label for="coded-author" class="form-label">Coded author:</label>
+                <label for="coded-author" class="form-label">Coded author</label>
                 <input type="text" class="form-control" id="coded-author" name="coded-author">
             </div>
             <div class="d-flex justify-content-between align-items-center my-2">
