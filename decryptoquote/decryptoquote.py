@@ -13,8 +13,9 @@ from decryptoquote.decrypter import Decrypter
 from decryptoquote.helpers import string_to_caps_words
 from decryptoquote.wordpatterns import WordPatterns
 
-MONGO_HOST: str = 'localhost'  # TODO figure this out (env. variables?)
-MONGO_PORT: int = 27017
+MONGO_HOST: str = os.environ.get('MONGODB_URI')
+if MONGO_HOST is None:
+    MONGO_HOST: str = 'localhost'
 DB_NAME: str = 'decryptoquote'
 COLLECTION_NAME: str = 'wordpatterns'
 CORPUS_FILE: str = "words_alpha_apos.txt"
@@ -128,8 +129,10 @@ def _setup_decryption(add_words, coded_quote, rebuild_patterns):
     corpus_file_path = os.path.join(
         os.path.dirname(__file__), CORPUS_FILE)
     cypher_letter_map = CypherLetterMap()
-    client = pymongo.MongoClient(MONGO_HOST, MONGO_PORT)
+    client = pymongo.MongoClient(MONGO_HOST)
     collection = client[DB_NAME][COLLECTION_NAME]
+    if collection.estimated_document_count() == 0:
+        rebuild_patterns = True
     word_patterns = WordPatterns(
         collection,
         overwrite_patterns=rebuild_patterns,

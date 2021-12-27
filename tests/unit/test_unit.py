@@ -10,7 +10,7 @@ import mongomock
 from decryptoquote.cypherlettermap import CypherLetterMap
 from decryptoquote.helpers import string_to_caps_words
 from decryptoquote.decryptoquote import (decrypt_quote_fully,
-                                         MONGO_HOST, MONGO_PORT)
+                                         MONGO_HOST)
 
 
 def test_string_to_caps_words():
@@ -54,7 +54,7 @@ def puzzle_works_check(coded_quote, decoded_quote):
     assert actual_decoded_quote == decoded_quote.upper()
 
 
-@mongomock.patch(servers=((MONGO_HOST, MONGO_PORT),))
+@mongomock.patch(servers=((MONGO_HOST),))
 def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
     puzzle_works_check(coded_quote, decoded_quote)
     author_results: List[Dict[str, str]] = decrypt_quote_fully(
