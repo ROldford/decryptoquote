@@ -132,6 +132,7 @@ def _setup_decryption(add_words, coded_quote, rebuild_patterns):
     client = pymongo.MongoClient(MONGO_HOST)
     collection = client[DB_NAME][COLLECTION_NAME]
     if collection.estimated_document_count() == 0:
+        print("Empty collection, will build")  # TODO remove
         rebuild_patterns = True
     word_patterns = WordPatterns(
         collection,

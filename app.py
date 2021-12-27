@@ -14,6 +14,7 @@ def get_index():
 # optional: coded_author
 @app.route("/", methods=['POST'])
 def get_solution():
+    # TODO remove prints
     print("POST / - getting solution")
     print(request.form)
     coded_quote = request.form.get('coded-quote')
