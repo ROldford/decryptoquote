@@ -14,9 +14,6 @@ def get_index():
 # optional: coded_author
 @app.route("/", methods=['POST'])
 def get_solution():
-    # TODO remove prints
-    print("POST / - getting solution")
-    print(request.form)
     coded_quote = request.form.get('coded-quote')
     coded_author = request.form.get('coded-author')
     full_solve = request.form.get('full-solve')
@@ -29,7 +26,6 @@ def get_solution():
     else:
         solutions = decrypt_quote(
             coded_quote, coded_author=coded_author, show_cypher=show_cypher)
-    print(solutions)
     return render_template('index.html', solutions=solutions), 200
 
 

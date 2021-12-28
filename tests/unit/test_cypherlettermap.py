@@ -226,7 +226,6 @@ def test_str(cypherletter_map, cypherletter_map2, cypherletter_map3):
     #     'P': None, 'Q': None, 'R': None, 'S': None, 'T': None,
     #     'U': None, 'V': None, 'W': None, 'X': None, 'Y': None, 'Z': ["A"],
     # }
-    print(repr(cypherletter_map))
     expected1: str = "ZYXWVUTSRQPONMLKJIHGFEDCBA"
     expected3: str = "Z________________________A"
     assert str(cypherletter_map) \
@@ -253,7 +252,6 @@ def test_repr(cypherletter_map, cypherletter_map2, cypherletter_map3):
     #     'P': None, 'Q': None, 'R': None, 'S': None, 'T': None,
     #     'U': None, 'V': None, 'W': None, 'X': None, 'Y': None, 'Z': ["A"],
     # }
-    print(repr(cypherletter_map))
     expected1: str = "{'A': 'Z', 'B': 'Y', 'C': 'X', 'D': 'W', 'E': 'V', " \
                      "'F': 'U', 'G': 'T', 'H': 'S', 'I': 'R', " \
                      "'J': 'Q', 'K': 'P', 'L': 'O', 'M': 'N', " \

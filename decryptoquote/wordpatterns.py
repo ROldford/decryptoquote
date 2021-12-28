@@ -38,7 +38,6 @@ class WordPatterns:
         self._db_collection.create_index(self.WORD_KEY, unique=True)
         self._corpus_file_path: Optional[str] = corpus_file_path
         if overwrite_patterns:
-            print("Overwriting patterns")  # TODO remove
             if corpus_file_path is None:
                 raise ValueError('No valid language file given')
             self._db_collection.delete_many({})
