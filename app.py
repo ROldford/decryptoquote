@@ -38,6 +38,12 @@ def bad_solution_request():
     return render_template('index.html', bad_request=True), 400
 
 
+@app.errorhandler(500)
+def server_error():
+    return render_template('index.html', server_error=True), 500
+
+
+
 # @app.route('/hello/', methods=['GET', 'POST'])
 # def welcome():
 #     return "Hello World!"

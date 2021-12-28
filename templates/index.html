@@ -10,11 +10,12 @@
     <div class="card mb-3">
             <h1 style="text-align: center">Decryptoquote</h1>
     </div>
-    {% if solutions and solutions|length > 0 %}
+    {% if solutions is defined %}
     <div>
-        <h2 style="text-align: center">Solutions</h2>
+        <h2 class="text-center">Solutions</h2>
+        {% if solutions|length > 0 %}
         <ul class="list-group-numbered container-sm">
-        {% for solution in solutions %}
+            {% for solution in solutions %}
             <li class="list-group-item d-flex justify-content-start align-items-start">
 <!--                <h6>Solution {{loop.index}}</h6>-->
                 <div class="ms-2 me-auto">
@@ -31,8 +32,11 @@
                     {% endif %}
                 </div>
             </li>
-        {% endfor %}
+            {% endfor %}
         </ul>
+        {% else %}
+            <p class="text-center">No solutions found</p>
+        {% endif %}
     </div>
     {% endif %}
     <div class="card container-sm mt-3">
