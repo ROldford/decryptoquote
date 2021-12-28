@@ -20,7 +20,7 @@ pydevd = "*"
 decryptoquote = {path = ".",editable = true}
 pyenchant = "*"
 wheel = "==0.34.2"
-pymongo = "*"
+pymongo = {extras = ["srv"], version = "*"}
 mongomock = "*"
 flask = "*"
 gunicorn = "*"

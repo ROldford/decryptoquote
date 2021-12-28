@@ -129,8 +129,6 @@ def _setup_decryption(add_words, coded_quote, rebuild_patterns):
     corpus_file_path = os.path.join(
         os.path.dirname(__file__), CORPUS_FILE)
     cypher_letter_map = CypherLetterMap()
-    print(MONGO_HOST)
-    print(os.environ)
     client = pymongo.MongoClient(MONGO_HOST)
     print(client)
     collection = client[DB_NAME][COLLECTION_NAME]
