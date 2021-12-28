@@ -98,6 +98,8 @@ class Decrypter:
             else:
                 current_match_words: List[str] = self._pattern_matches[
                     self._word_index]
+                if len(current_match_words) == 0:
+                    return False
                 current_match_word: str = current_match_words[
                     self._match_indices[self._word_index]]
 

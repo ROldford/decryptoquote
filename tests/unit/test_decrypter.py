@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Unit tests for Decrypter in `decryptoquote` package."""
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import pytest
 import mongomock
@@ -77,12 +77,24 @@ def test_decrypt_all(collection2):
     assert alternate_decode in solutions
 
 
+def test_word_too_long(collection):
+    coded_quote: str = "ABCDEFGHI"
+    _, success = do_decryption(collection, coded_quote)
+    assert not success
+
+
 def decrypt_case(collection, coded_quote: str, expected_decode: str):
-    decrypter: Decrypter = build_decrypter(collection, coded_quote)
-    success: bool = decrypter.decrypt()
+    decrypter, success = do_decryption(collection, coded_quote)
     assert success
     cypher_letter_map: CypherLetterMap = decrypter.cypher_letter_map
     assert cypher_letter_map.decode(coded_quote) == expected_decode
+
+
+def do_decryption(collection, coded_quote) -> Tuple[Decrypter, bool]:
+    decrypter: Decrypter = build_decrypter(collection, coded_quote)
+    success: bool = decrypter.decrypt()
+    return decrypter, success
+
 
 
 def build_decrypter(collection, coded_quote: str) -> Decrypter:
