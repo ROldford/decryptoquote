@@ -10,6 +10,10 @@
     <div class="card mb-3">
             <h1 style="text-align: center">Decryptoquote</h1>
     </div>
+    {% if server_error %}
+        <h2 class="text-center">Server Error</h2>
+        <p class="text-center">Something has gone wrong with the server. We're working on it!</p>
+    {% endif %}
     {% if solutions is defined %}
     <div>
         <h2 class="text-center">Solutions</h2>
