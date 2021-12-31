@@ -26,18 +26,22 @@ def get_solution():
     else:
         solutions = decrypt_quote(
             coded_quote, coded_author=coded_author, show_cypher=show_cypher)
-    return render_template('index.html', solutions=solutions), 200
+        # TODO template needs loading indicator
+    return render_index(solutions=solutions), 200
 
 
 @app.errorhandler(400)
-def bad_solution_request():
-    return render_template('index.html', bad_request=True), 400
+def bad_request():
+    return render_index(bad_request=True), 400
 
 
 @app.errorhandler(500)
 def server_error():
-    return render_template('index.html', server_error=True), 500
+    return render_index(server_error=True), 500
 
+
+def render_index(**kwargs):
+    return render_template('index.html', **kwargs)
 
 
 # @app.route('/hello/', methods=['GET', 'POST'])
