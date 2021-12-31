@@ -18,7 +18,9 @@ def get_solution():
     coded_author = request.form.get('coded-author')
     full_solve = request.form.get('full-solve')
     show_cypher = request.form.get('show-cypher') is not None
-    if coded_quote is None:
+    if not coded_quote:
+        if coded_quote == "":
+            return render_index(form_data_invalid=True), 400
         abort(400)
     if full_solve:
         solutions = decrypt_quote_fully(

@@ -15,6 +15,13 @@
         href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
+    {% if form_data_invalid %}
+        {% set quote_validity = " is-invalid" %}
+        {% set other_validity = " is-valid" %}
+    {% else %}
+        {% set quote_validity = "" %}
+        {% set other_validity = "" %}
+    {% endif %}
     <div class="card mb-3">
         <h1 style="text-align: center">Decryptoquote</h1>
     </div>
@@ -56,22 +63,48 @@
     {% endif %}
     <div class="card container-sm mt-3">
         <h2 style="text-align: center">Enter Your Cryptoquote</h2>
-        <form action="/" method="post">
+        <form name="solveForm" action="/" onsubmit="return submitForm()"
+              method="post" novalidate>
             <div class="my-1">
                 <label for="coded-quote" class="form-label">Coded quote</label>
-                <span id="coded-quote-required text-secondary" class="form-text">Required</span>
-                <textarea class="form-control" id="coded-quote" name="coded-quote" rows="3" aria-describedby="coded-quote-required"></textarea>
+                <span id="coded-quote-required text-secondary"
+                      class="form-text">Required</span>
+                <textarea class="form-control{{ quote_validity }}"
+                          id="coded-quote" name="coded-quote" rows="3"
+                          aria-describedby="coded-quote-required"></textarea>
+                {% if form_data_invalid %}
+                <div id="coded-quote-feedback" class="invalid-feedback">
+                    Please provide a coded quote.
+                </div>
+                {% endif %}
             </div>
             <div class="my-1">
-                <label for="coded-author" class="form-label">Coded author</label>
-                <input type="text" class="form-control" id="coded-author" name="coded-author">
+                <label for="coded-author" class="form-label">
+                    Coded author
+                </label>
+                <input
+                    type="text"
+                    class="form-control{{ other_validity }}"
+                    id="coded-author" name="coded-author">
             </div>
             <div class="d-flex justify-content-between align-items-center my-2">
-                <div>
-                    <label for="full-solve" class="form-check-label">Find all solutions?</label>
-                    <input type="checkbox" class="form-check-input" id="full-solve" name="full-solve">
-                    <label for="show-cypher" class="form-check-label">Show coding key?</label>
-                    <input type="checkbox" class="form-check-input" id="show-cypher" name="show-cypher">
+                <div class="d-flex justify-content-left">
+                    <div class="me-2">
+                        <label for="full-solve" class="form-check-label">
+                            Find all solutions?
+                        </label>
+                        <input type="checkbox"
+                               class="form-check-input{{ other_validity }}"
+                               id="full-solve" name="full-solve">
+                    </div>
+                    <div>
+                        <label for="show-cypher" class="form-check-label">
+                            Show coding key?
+                        </label>
+                        <input type="checkbox"
+                               class="form-check-input{{ other_validity }}"
+                               id="show-cypher" name="show-cypher">
+                    </div>
                 </div>
                 <div>
                     <input type="submit" value="Solve!">
