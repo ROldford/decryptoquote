@@ -12,12 +12,12 @@ def get_index():
 # form data:
 # required: full_solve, coded_quote
 # optional: coded_author
-@app.route("/", methods=['POST'])
+@app.route("/solution", methods=['GET'])
 def get_solution():
-    coded_quote = request.form.get('coded-quote')
-    coded_author = request.form.get('coded-author')
-    full_solve = request.form.get('full-solve')
-    show_cypher = request.form.get('show-cypher') is not None
+    coded_quote = request.args.get('codedQuote')
+    coded_author = request.args.get('codedAuthor')
+    full_solve = request.args.get('fullSolve')
+    show_cypher = request.args.get('showCypher') is not None
     if not coded_quote:
         if coded_quote == "":
             return render_index(form_data_invalid=True), 400
