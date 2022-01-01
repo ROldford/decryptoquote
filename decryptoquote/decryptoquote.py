@@ -16,7 +16,9 @@ from decryptoquote.wordpatterns import WordPatterns
 MONGO_HOST: str = os.environ.get('MONGODB_URI')
 if MONGO_HOST is None:
     MONGO_HOST: str = 'localhost'
-DB_NAME: str = 'decryptoquote'
+DB_NAME: str = os.environ.get('MONGODB_NAME')
+if DB_NAME is None:
+    DB_NAME: str = 'decryptoquote'
 COLLECTION_NAME: str = 'wordpatterns'
 CORPUS_FILE: str = "words_alpha_apos.txt"
 
