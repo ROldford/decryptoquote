@@ -5,7 +5,7 @@ Main module.
 """
 import os
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 import pymongo
 
 from decryptoquote.cypherlettermap import CypherLetterMap
@@ -13,12 +13,8 @@ from decryptoquote.decrypter import Decrypter
 from decryptoquote.helpers import string_to_caps_words
 from decryptoquote.wordpatterns import WordPatterns
 
-MONGO_HOST: str = os.environ.get('MONGODB_URI')
-if MONGO_HOST is None:
-    MONGO_HOST: str = 'localhost'
-DB_NAME: str = os.environ.get('MONGODB_NAME')
-if DB_NAME is None:
-    DB_NAME: str = 'decryptoquote'
+MONGO_HOST = os.environ.get('MONGODB_URI', 'localhost')
+DB_NAME = os.environ.get('MONGODB_NAME', 'decryptoquote')
 COLLECTION_NAME: str = 'wordpatterns'
 CORPUS_FILE: str = "words_alpha_apos.txt"
 
@@ -31,8 +27,8 @@ logging.basicConfig(
 
 def decrypt_quote_fully(
     coded_quote: str,
-    coded_author: str = None,
-    add_words: List[str] = None,
+    coded_author: Optional[str] = None,
+    add_words: Optional[List[str]] = None,
     show_cypher: bool = False,
     rebuild_patterns: bool = False,
 ) -> List[Dict[str, str]]:
@@ -79,8 +75,8 @@ def decrypt_quote_fully(
 
 def decrypt_quote(
     coded_quote: str,
-    coded_author: str = None,
-    add_words: List[str] = None,
+    coded_author: Optional[str] = None,
+    add_words: Optional[List[str]] = None,
     show_cypher: bool = False,
     rebuild_patterns: bool = False,
 ) -> List[Dict[str, str]]:

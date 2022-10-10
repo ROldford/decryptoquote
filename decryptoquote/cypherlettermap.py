@@ -150,10 +150,11 @@ class CypherLetterMap:
     def keystring(self):
         key: List[str] = []
         for letter in LETTERS:
-            if self._clmap[letter] is None:
+            letter_for_key = self._clmap[letter]
+            if letter_for_key is None:
                 key.append("_")
             else:
-                key.append(self._clmap[letter])
+                key.append(letter_for_key)
         return ''.join(key)
 
     def _add_word_to_mapping_no_save(self,

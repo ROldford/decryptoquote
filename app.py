@@ -33,12 +33,12 @@ def get_solution():
 
 
 @app.errorhandler(400)
-def bad_request():
+def bad_request(error):
     return render_index(bad_request=True), 400
 
 
 @app.errorhandler(500)
-def server_error():
+def server_error(error):
     return render_index(server_error=True), 500
 
 

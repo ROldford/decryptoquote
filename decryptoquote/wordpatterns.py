@@ -33,7 +33,7 @@ class WordPatterns:
     def __init__(self,
                  db_collection: 'Collection',
                  overwrite_patterns: bool = False,
-                 corpus_file_path: str = None) -> None:
+                 corpus_file_path: Optional[str] = None) -> None:
         self._db_collection = db_collection
         self._db_collection.create_index(self.WORD_KEY, unique=True)
         self._corpus_file_path: Optional[str] = corpus_file_path
@@ -48,7 +48,7 @@ class WordPatterns:
                     s.upper() for s in file.read().splitlines()
                 ]
                 word_set: Set[str] = set(word_list)
-                insert_list: List[str] = []
+                insert_list: List[Dict[str, str]] = []
                 for word in word_set:
                     pattern: str = self.word_to_pattern(word)
                     # insert_set.add({self.WORD_KEY: word,

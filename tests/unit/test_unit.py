@@ -69,7 +69,7 @@ def puzzle_test_case(coded_quote, coded_author, decoded_quote, decoded_author):
     for result in author_results:
         actual_quote = result.get('decoded_quote')
         actual_author = result.get('decoded_author')
-        if actual_quote == decoded_quote:
+        if actual_quote == decoded_quote and actual_author is not None:
             for letter_pair in zip(decoded_author, actual_author):
                 expected_letter, actual_letter = letter_pair
                 assert (
